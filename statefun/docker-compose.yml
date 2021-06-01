@@ -1,0 +1,74 @@
+version: "2.1"
+
+services:
+
+  ###############################################################
+  #    Functions service
+  ###############################################################
+
+#  benchmark-functions:
+#    build:
+#      dockerfile: stateful-functions/Dockerfile
+#      context: .
+#    expose:
+#      - "1108"
+
+  ###############################################################
+  #    StateFun runtime
+  ###############################################################
+
+  statefun-manager:
+    image: apache/flink-statefun:3.0.0
+    expose:
+      - "6123"
+    ports:
+      - "8081:8081"
+    environment:
+      ROLE: master
+      MASTER_HOST: statefun-manager
+    volumes:
+      - ./module.yaml:/opt/statefun/modules/benchmark/module.yaml
+
+  statefun-worker:
+    image: apache/flink-statefun:3.0.0
+    expose:
+      - "6121"
+      - "6122"
+    depends_on:
+      - statefun-manager
+      - kafka
+#      - benchmark-functions
+    links:
+      - "statefun-manager:statefun-manager"
+      - "kafka:kafka"
+#      - "benchmark-functions:benchmark-functions"
+    environment:
+      ROLE: worker
+      MASTER_HOST: statefun-manager
+    volumes:
+      - ./module.yaml:/opt/statefun/modules/benchmark/module.yaml
+
+  ###############################################################
+  #    Kafka for ingress and egress
+  ###############################################################
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:5.4.3
+    environment:
+      ZOOKEEPER_CLIENT_PORT: "2181"
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:5.4.3
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    links:
+      - "zookeeper:zookeeper"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1

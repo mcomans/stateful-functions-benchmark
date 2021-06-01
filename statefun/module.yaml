@@ -1,0 +1,86 @@
+version: "3.0"
+
+module:
+  meta:
+    type: remote
+  spec:
+    endpoints:
+      - endpoint:
+          meta:
+            kind: http
+          spec:
+            functions: benchmark/*
+            urlPathTemplate: http://host.docker.internal:1108/
+    ingresses:
+      - ingress:
+          meta:
+            type: io.statefun.kafka/ingress
+            id: benchmark/add-to-cart
+          spec:
+            address: kafka:9092
+            consumerGroupId: benchmark
+            topics:
+              - topic: add-to-cart
+                valueType: shoppingcart/AddToCart
+                targets:
+                  - benchmark/shopping-cart
+      - ingress:
+          meta:
+            type: io.statefun.kafka/ingress
+            id: benchmark/remove-from-cart
+          spec:
+            address: kafka:9092
+            consumerGroupId: benchmark
+            topics:
+              - topic: remove-from-cart
+                valueType: shoppingcart/RemoveFromCart
+                targets:
+                  - benchmark/shopping-cart
+      - ingress:
+          meta:
+            type: io.statefun.kafka/ingress
+            id: benchmark/add-credit
+          spec:
+            address: kafka:9092
+            consumerGroupId: benchmark
+            topics:
+              - topic: add-credit
+                valueType: user/AddCredit
+                targets:
+                  - benchmark/user
+      - ingress:
+          meta:
+            type: io.statefun.kafka/ingress
+            id: benchmark/add-stock
+          spec:
+            address: kafka:9092
+            consumerGroupId: benchmark
+            topics:
+              - topic: add-stock
+                valueType: product/AddStock
+                targets:
+                  - benchmark/product
+      - ingress:
+          meta:
+            type: io.statefun.kafka/ingress
+            id: benchmark/set-price
+          spec:
+            address: kafka:9092
+            consumerGroupId: benchmark
+            topics:
+              - topic: set-price
+                valueType: product/SetPrice
+                targets:
+                  - benchmark/product
+      - ingress:
+          meta:
+            type: io.statefun.kafka/ingress
+            id: benchmark/checkout
+          spec:
+            address: kafka:9092
+            consumerGroupId: benchmark
+            topics:
+              - topic: checkout
+                valueType: order/Checkout
+                targets:
+                  - benchmark/order
