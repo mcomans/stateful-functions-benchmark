@@ -35,6 +35,7 @@ Install anna python package:
 ```
 cd client/python
 python setup.py install
+cd ../../../../
 ```
 
 ### Running app
