@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "benchmark.Interfaces", "benchmark.Interfaces\benchmark.Interfaces.csproj", "{1E5476AC-A3BC-4E78-9082-552EDC53075B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "benchmark.Grains", "benchmark.Grains\benchmark.Grains.csproj", "{883D6F6E-C555-46B0-AC6A-CBECFBC41C90}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "benchmark.API", "benchmark.API\benchmark.API.csproj", "{C8856DB1-8E25-407F-96B2-18C4CFA897E7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1E5476AC-A3BC-4E78-9082-552EDC53075B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E5476AC-A3BC-4E78-9082-552EDC53075B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E5476AC-A3BC-4E78-9082-552EDC53075B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E5476AC-A3BC-4E78-9082-552EDC53075B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{883D6F6E-C555-46B0-AC6A-CBECFBC41C90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{883D6F6E-C555-46B0-AC6A-CBECFBC41C90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{883D6F6E-C555-46B0-AC6A-CBECFBC41C90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{883D6F6E-C555-46B0-AC6A-CBECFBC41C90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8856DB1-8E25-407F-96B2-18C4CFA897E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8856DB1-8E25-407F-96B2-18C4CFA897E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8856DB1-8E25-407F-96B2-18C4CFA897E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8856DB1-8E25-407F-96B2-18C4CFA897E7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
