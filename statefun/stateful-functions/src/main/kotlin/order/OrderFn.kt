@@ -1,5 +1,6 @@
 package order
 
+import LoggedStatefulFunction
 import createJsonType
 import mu.KotlinLogging
 import org.apache.flink.statefun.sdk.java.*
@@ -18,7 +19,7 @@ import java.util.concurrent.CompletableFuture
 
 private val logger = KotlinLogging.logger {}
 
-class OrderFn : StatefulFunction {
+class OrderFn : LoggedStatefulFunction() {
 
     companion object {
         val TYPE = TypeName.typeNameFromString("benchmark/order")
@@ -28,7 +29,7 @@ class OrderFn : StatefulFunction {
             .withSupplier(::OrderFn)
     }
 
-    override fun apply(context: Context, message: Message): CompletableFuture<Void> {
+    override fun invoke(context: Context, message: Message): CompletableFuture<Void> {
         if (message.`is`(OrderMessages.CHECKOUT)) {
             val checkoutMessage = message.`as`(OrderMessages.CHECKOUT)
 

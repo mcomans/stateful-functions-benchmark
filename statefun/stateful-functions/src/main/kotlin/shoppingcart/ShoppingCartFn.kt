@@ -1,5 +1,6 @@
 package shoppingcart
 
+import LoggedStatefulFunction
 import createJsonType
 import mu.KotlinLogging
 import org.apache.flink.statefun.sdk.java.*
@@ -10,7 +11,7 @@ import java.util.concurrent.CompletableFuture
 
 private val logger = KotlinLogging.logger {}
 
-class ShoppingCartFn : StatefulFunction {
+class ShoppingCartFn : LoggedStatefulFunction() {
 
     companion object {
         val TYPE = TypeName.typeNameFromString("benchmark/shopping-cart")
@@ -20,7 +21,7 @@ class ShoppingCartFn : StatefulFunction {
             .withSupplier(::ShoppingCartFn)
     }
 
-    override fun apply(context: Context, message: Message): CompletableFuture<Void> {
+    override fun invoke(context: Context, message: Message): CompletableFuture<Void> {
         // Add to cart function
         if (message.`is`(ShoppingCartMessages.ADD_TO_CART)) {
             val addToCartMessage = message.`as`(ShoppingCartMessages.ADD_TO_CART)

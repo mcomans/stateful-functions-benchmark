@@ -1,9 +1,12 @@
 package user
 
+import LoggedStatefulFunction
 import createJsonType
 import mu.KotlinLogging
-import mu.withLoggingContext
-import org.apache.flink.statefun.sdk.java.*
+import org.apache.flink.statefun.sdk.java.Context
+import org.apache.flink.statefun.sdk.java.StatefulFunctionSpec
+import org.apache.flink.statefun.sdk.java.TypeName
+import org.apache.flink.statefun.sdk.java.ValueSpec
 import org.apache.flink.statefun.sdk.java.message.Message
 import org.apache.flink.statefun.sdk.java.message.MessageBuilder
 import types.user.RetractCreditResponse
@@ -12,14 +15,14 @@ import java.util.concurrent.CompletableFuture
 
 val logger = KotlinLogging.logger {}
 
-class UserFn : StatefulFunction {
+class UserFn : LoggedStatefulFunction() {
     companion object {
         val TYPE = TypeName.typeNameFromString("benchmark/user")
         val USER = ValueSpec.named("user").withCustomType(User.TYPE)
         val SPEC = StatefulFunctionSpec.builder(TYPE).withValueSpec(USER).withSupplier(::UserFn).build()
     }
 
-    override fun apply(context: Context, message: Message): CompletableFuture<Void> {
+    override fun invoke(context: Context, message: Message): CompletableFuture<Void> {
         if (message.`is`(UserMessages.ADD_CREDIT)) {
             val addCreditMessage = message.`as`(UserMessages.ADD_CREDIT)
             logger.info { "User ${context.self().id()} - Adding ${addCreditMessage.amount} credit"}
