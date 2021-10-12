@@ -1,12 +1,13 @@
 from flask import Flask
 from functions import register_functions
-from routes import orders, products, shopping_carts, users
 from cloud import cloud
+
+register_functions(cloud)
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 
-register_functions(cloud)
+from routes import orders, products, shopping_carts, users
 
 app.register_blueprint(orders, url_prefix="/orders")
 app.register_blueprint(products, url_prefix="/products")
