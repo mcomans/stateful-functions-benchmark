@@ -1,7 +1,9 @@
 from functions.products import register_products_functions
+from functions.users import register_users_functions
 
 def register_functions(cloud):
   register_products_functions(cloud)
+  register_users_functions(cloud)
 
   def add_to_cart(cb, cart_id, product_id, amount):
     cart = cb.get(cart_id)
