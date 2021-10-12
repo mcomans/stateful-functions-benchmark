@@ -1,20 +1,14 @@
-from cloudburst.client.client import CloudburstConnection
-from flask import Flask, request
+from flask import Flask
 from benchmark import register
-
-local_cloud = CloudburstConnection('127.0.0.1', '127.0.0.1', local=True)
+from routes import orders, products, shopping_carts, users
+from cloud import cloud
 
 app = Flask(__name__)
+app.url_map.strict_slashes = False
 
-register.register_functions(local_cloud)
+register.register_functions(cloud)
 
-add_to_cart = local_cloud.get_function("add_to_cart")
-
-
-@app.route("/", methods=["POST"])
-def test():
-
-  data = request.json
-  res = add_to_cart("cart1", data["product_id"], data["amount"]).get()
-  print(res)
-  return res
+app.register_blueprint(orders, url_prefix="/orders")
+app.register_blueprint(products, url_prefix="/products")
+app.register_blueprint(shopping_carts, url_prefix="/shopping-carts")
+app.register_blueprint(users, url_prefix="/users")
