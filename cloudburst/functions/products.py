@@ -11,7 +11,7 @@ def set_product_price(cb, product_id, price):
 def retract_product_stock(cb, product_id, amount):
   product = cb.get(product_id);
   if product is None:
-    return
+    return None
   else:
     product["stock"] -= amount
   

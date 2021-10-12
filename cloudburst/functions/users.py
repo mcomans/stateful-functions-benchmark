@@ -13,7 +13,7 @@ def retract_user_credits(cb, user_id, credits):
   user = cb.get(user_id)
 
   if user is None:
-    return
+    return None
   else:
     user["credits"] -= credits
   
