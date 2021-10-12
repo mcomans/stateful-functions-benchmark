@@ -12,9 +12,9 @@ def create_product():
   product_id = str(uuid4())
   product_body = request.json
 
-  if "price" in product_body:
+  if product_body is not None and "price" in product_body:
     product = set_product_price(product_id, product_body["price"]).get()
-  if "stock" in product_body:
+  if product_body is not None and "stock" in product_body:
     product = add_product_stock(product_id, product_body["stock"]).get()
 
   return product_id, 201
@@ -23,9 +23,9 @@ def create_product():
 def patch_product(product_id):
   product_body = request.json
 
-  if "price" in product_body:
+  if product_body is not None and "price" in product_body:
     product = set_product_price(product_id, product_body["price"]).get()
-  if "stock" in product_body:
+  if product_body is not None and "stock" in product_body:
     product = add_product_stock(product_id, product_body["stock"]).get()
   
   return product

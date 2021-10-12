@@ -4,7 +4,7 @@ from cloud import cloud
 
 carts = Blueprint('shopping-carts', __name__)
 
-add_to_cart = cloud.get_function("add_to_cart")
+add_to_cart = cloud.get_function("add_product_to_cart")
 
 @carts.post("/")
 def create_shopping_cart():

@@ -27,5 +27,5 @@ def remove_product_from_cart(cb, cart_id, product_id, amount):
   return str(cart)
 
 def register_carts_functions(cloud):
-  cloud.register(add_product_to_cart, "add_product_to_cloud")
-  cloud.register(remove_product_from_cart, "remove_product_from_cloud")
+  cloud.register(add_product_to_cart, "add_product_to_cart")
+  cloud.register(remove_product_from_cart, "remove_product_from_cart")
