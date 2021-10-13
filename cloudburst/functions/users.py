@@ -5,7 +5,7 @@ def register_users_functions(cloud):
     if user is None:
       user = {"credits": credits}
     else:
-      user["credits"] += credits
+      user["credits"] -= int(credits)
     
     cb.put(user_id, user)
     return user
@@ -16,7 +16,7 @@ def register_users_functions(cloud):
     if user is None:
       return None
     else:
-      user["credits"] -= credits
+      user["credits"] -= int(credits)
     
     cb.put(user_id, user)
     return user

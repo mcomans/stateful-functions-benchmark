@@ -14,7 +14,7 @@ def register_products_functions(cloud):
     if product is None:
       return None
     else:
-      product["stock"] -= amount
+      product["stock"] -= int(amount)
     
     cb.put(product_id, product)
     return product
@@ -24,7 +24,7 @@ def register_products_functions(cloud):
     if product is None:
       product = {"price": 0, "stock": amount}
     else:
-      product["stock"] += amount
+      product["stock"] += int(amount)
     
     cb.put(product_id, product)
     return product
