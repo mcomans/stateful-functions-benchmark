@@ -9,12 +9,11 @@ namespace benchmark.Grains
     {
         public async Task Checkout(IShoppingCartGrain shoppingCart, IUserGrain user)
         {
-            // stop extra roundtrip to products by returning price from function DecreaseStock?
             var products = await shoppingCart.GetContents();
             var prices = await Task.WhenAll(products.Select(
                 async product => product.Value * await product.Key.GetPrice()));
             var totalPrice = prices.Aggregate(0, (acc, price) => acc + price);
-
+            
             await user.RetractCredit(totalPrice);
             await Task.WhenAll(products.Select(product => product.Key.DecreaseStock(product.Value)));
         }

@@ -17,20 +17,20 @@ class BenchmarkUser(HttpUser):
         product2_price = randint(1, 10)
         product2_stock = randint(10, 20)
 
-        self.client.patch(f"/products/{product1}", json={"Price": product1_price, "Stock": product1_stock})
-        self.client.patch(f"/products/{product2}", json={"Price": product2_price, "Stock": product2_stock})
+        self.client.patch(f"/products/{product1}", json={"Price": product1_price, "Stock": product1_stock}, name="/products/<id>")
+        self.client.patch(f"/products/{product2}", json={"Price": product2_price, "Stock": product2_stock}, name="/products/<id>")
 
         user_response = self.client.post("/users", json={})
         user = user_response.text.strip("\"")
         user_credits = product1_price * product1_stock + product2_price * product2_stock
 
-        self.client.patch(f"/users/{user}/credits/add", json={"Credits": user_credits})
+        self.client.patch(f"/users/{user}/credits/add", json={"Credits": user_credits}, name="/users/<id>/credits/add")
 
         shopping_cart_response = self.client.post("/shopping-carts")
         shopping_cart = shopping_cart_response.text.strip("\"")
 
-        self.client.post(f"/shopping-carts/{shopping_cart}/products", json={"ProductId": product1, "Amount": product1_stock})
-        self.client.post(f"/shopping-carts/{shopping_cart}/products", json={"ProductId": product2, "Amount": product2_stock})
+        self.client.post(f"/shopping-carts/{shopping_cart}/products", json={"ProductId": product1, "Amount": product1_stock}, name="/shopping-carts/<id>/products")
+        self.client.post(f"/shopping-carts/{shopping_cart}/products", json={"ProductId": product2, "Amount": product2_stock}, name="/shopping-carts/<id>/products")
 
         self.client.post("/orders/checkout", json={"ShoppingCartId": shopping_cart, "UserId": user})
 
