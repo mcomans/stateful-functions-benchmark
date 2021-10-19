@@ -20,11 +20,16 @@ namespace benchmark.Grains
             _productState.State.Stock += amount;
             await _productState.WriteStateAsync();
         }
-
-        public async Task DecreaseStock(int amount)
+        
+        public async Task<(bool, int)> DecreaseStock(int amount)
         {
+            if (_productState.State.Stock - amount < 0)
+            {
+                return (false, _productState.State.Price);
+            }
             _productState.State.Stock -= amount;
             await _productState.WriteStateAsync();
+            return (true, _productState.State.Price);
         }
 
         public async Task SetPrice(int price)

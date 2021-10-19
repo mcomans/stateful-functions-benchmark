@@ -21,10 +21,17 @@ namespace benchmark.Grains
             await _userState.WriteStateAsync();
         }
 
-        public async Task RetractCredit(int amount)
+        public async Task<bool> RetractCredit(int amount)
         {
+            if (_userState.State.Credits - amount < 0)
+            {
+                return false;
+            }
+            
             _userState.State.Credits -= amount;
             await _userState.WriteStateAsync();
+
+            return true;
         }
     }
 

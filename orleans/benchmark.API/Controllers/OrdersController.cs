@@ -28,9 +28,9 @@ namespace benchmark.API.Controllers
             var shoppingCart = _client.GetGrain<IShoppingCartGrain>(order.ShoppingCartId);
             var user = _client.GetGrain<IUserGrain>(order.UserId);
 
-            await grain.Checkout(shoppingCart, user);
+            var success = await grain.Checkout(shoppingCart, user);
             
-            return Ok();
+            return success ? Ok() : Problem("Checkout failed");
         }
     }
 
