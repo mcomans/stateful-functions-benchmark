@@ -97,21 +97,11 @@ class OrderFn : LoggedStatefulFunction() {
 
                 if (order.products.values.any {orderProduct -> !orderProduct.retractSuccessful}) {
                     // Roll back stock changes if there was not enough stock of at least one item in cart
-                    logger.info { "Order ${context.self().id()} - Not all retract stock operations were successful" }
-                    logger.info { "Order ${context.self().id()} - Rolling back stock changes" }
-
-                    order.products.filter {entry -> entry.value.retractSuccessful }.forEach { entry -> run {
-                        val addStockMessage = MessageBuilder
-                            .forAddress(ProductFn.TYPE, entry.key)
-                            .withCustomType(ProductMessages.ADD_STOCK, AddStock(entry.key, entry.value.amount))
-                            .build()
-
-                        logger.info { "Order ${context.self().id()} - Sending add stock message to ${entry.key}" }
-                        context.send(addStockMessage)
-
-                        order.status = "FAILED"
-                    } }
+                    logger.info { "Order ${context.self().id()} - Insufficient stock for one or more products, rolling back stock changes" }
+                    order.products.filter {entry -> entry.value.retractSuccessful }.forEach { entry -> rollbackStock(entry, context) }
+                    order.status = "FAILED"
                 } else {
+                    // Calculate total price, and send retract credit message to user
                     val totalPrice = order.products.values.fold(0) { acc, orderProduct -> acc + orderProduct.amount * orderProduct.price!! }
 
                     val retractCreditMessage = MessageBuilder.forAddress(UserFn.TYPE, order.userId)
@@ -133,17 +123,33 @@ class OrderFn : LoggedStatefulFunction() {
             // STEP 4: Receive retract credit response from user function, and set the checkout to completed
             val retractCreditResponse = message.`as`(UserMessages.RETRACT_CREDIT_RESPONSE)
             logger.info { "Order ${context.self().id()} - Received retract credit response from ${retractCreditResponse.userId}" }
-            logger.info { "Order ${context.self().id()} - Checkout completed" }
 
             val storage = context.storage()
             val order = storage.get(ORDER).get()
 
-            order.status = "COMPLETED"
+            if (retractCreditResponse.success) {
+                logger.info { "Order ${context.self().id()} - Checkout completed" }
+                order.status = "COMPLETED"
+            } else {
+                logger.info { "Order ${context.self().id()} - Credit insufficient, rolling back stock changes" }
+                order.products.forEach { entry -> rollbackStock(entry, context) }
+                order.status = "FAILED"
+            }
 
             storage.set(ORDER, order)
         }
 
         return context.done()
+    }
+
+    private fun rollbackStock(entry: Map.Entry<String, Order.OrderProduct>, context: Context) {
+        val addStockMessage = MessageBuilder
+            .forAddress(ProductFn.TYPE, entry.key)
+            .withCustomType(ProductMessages.ADD_STOCK, AddStock(entry.key, entry.value.amount))
+            .build()
+
+        logger.info { "Order ${context.self().id()} - Sending add stock message to ${entry.key}" }
+        context.send(addStockMessage)
     }
 
     class Order(val userId: String, var status: String, val products: MutableMap<String, OrderProduct>) {

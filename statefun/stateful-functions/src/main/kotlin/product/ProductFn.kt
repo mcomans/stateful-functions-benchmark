@@ -31,11 +31,11 @@ class ProductFn : LoggedStatefulFunction() {
 
                 val storage = context.storage()
                 val product = storage.get(PRODUCT).orElse(Product(0, 0))
-                val newStock = product.stock + addStockMessage.amount
+                product.stock += addStockMessage.amount
 
-                storage.set(PRODUCT, Product(product.price, newStock))
+                storage.set(PRODUCT, product)
 
-                logger.info { "Product ${addStockMessage.productId} - New amount of stock: ${newStock}" }
+                logger.info { "Product ${addStockMessage.productId} - New amount of stock: ${product.stock}" }
 
                 return context.done()
             }
@@ -48,16 +48,15 @@ class ProductFn : LoggedStatefulFunction() {
                 val storage = context.storage()
                 val product = storage.get(PRODUCT).orElse(Product(0, 0))
                 var success = false
-                var newStock = product.stock
 
                 if (product.stock - retractStockMessage.amount >= 0) {
-                    newStock = max(product.stock - retractStockMessage.amount, 0)
+                    product.stock -= retractStockMessage.amount
                     success = true
                 }
 
-                storage.set(PRODUCT, Product(product.price, newStock))
+                storage.set(PRODUCT, product)
 
-                logger.info { "Product ${retractStockMessage.productId} - New amount of stock: $newStock" }
+                logger.info { "Product ${retractStockMessage.productId} - New amount of stock: ${product.stock}" }
 
                 if (context.caller().isPresent) {
                     val caller = context.caller().get()
@@ -85,7 +84,8 @@ class ProductFn : LoggedStatefulFunction() {
 
                 val storage = context.storage()
                 val product = storage.get(PRODUCT).orElse(Product(0, 0))
-                storage.set(PRODUCT, Product(setPriceMessage.price, product.stock))
+                product.price = setPriceMessage.price
+                storage.set(PRODUCT, product)
 
                 logger.info { "Product ${setPriceMessage.productId} - Price set to: ${setPriceMessage.price}" }
 
@@ -96,7 +96,7 @@ class ProductFn : LoggedStatefulFunction() {
     }
 
 
-    class Product(val price: Int, val stock: Int) {
+    class Product(var price: Int, var stock: Int) {
         companion object {
             val TYPE = createJsonType("product", Product::class)
         }
