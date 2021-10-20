@@ -1,33 +1,35 @@
-import org.jetbrains.kotlin.gradle.dsl.Coroutines
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val logback_version = "1.2.3"
-val ktor_version = "1.5.4"
-val kotlin_version = "1.4.32"
-
 plugins {
-    application
-    kotlin("jvm") version "1.4.32"
+    id("org.springframework.boot") version "2.5.5"
+    id("io.spring.dependency-management") version "1.0.11.RELEASE"
+    kotlin("jvm") version "1.5.31"
+    kotlin("plugin.spring") version "1.5.31"
 }
 
 group = "nl.tudelft"
 version = "0.0.1-SNAPSHOT"
-
+java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
-    implementation("org.slf4j:slf4j-simple:1.7.29")
-    implementation("io.ktor:ktor-server-netty:$ktor_version")
-    implementation("io.ktor:ktor-server-core:$ktor_version")
-    implementation("io.ktor:ktor-jackson:$ktor_version")
-    implementation("org.apache.kafka:kafka-clients:2.8.0")
+    implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.springframework.kafka:spring-kafka")
 }
 
-tasks.withType<KotlinCompile>() {
-    kotlinOptions.jvmTarget = "11"
+tasks.withType<KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs = listOf("-Xjsr305=strict")
+        jvmTarget = "11"
+    }
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
