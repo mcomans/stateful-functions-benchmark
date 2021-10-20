@@ -10,6 +10,7 @@ import product.ProductFn
 import product.ProductMessages
 import shoppingcart.ShoppingCartFn
 import shoppingcart.ShoppingCartMessages
+import types.product.AddStock
 import types.product.RetractStock
 import types.shoppingcart.GetCart
 import types.user.RetractCredit
@@ -31,6 +32,7 @@ class OrderFn : LoggedStatefulFunction() {
 
     override fun invoke(context: Context, message: Message): CompletableFuture<Void> {
         if (message.`is`(OrderMessages.CHECKOUT)) {
+            // STEP 1: Send message to shopping cart function to receive contents of cart
             val checkoutMessage = message.`as`(OrderMessages.CHECKOUT)
 
             logger.info { "Order ${checkoutMessage.orderId} - Checkout starting (shopping cart: ${checkoutMessage.shoppingCartId}, user: ${checkoutMessage.userId})" }
@@ -50,6 +52,7 @@ class OrderFn : LoggedStatefulFunction() {
         }
 
         if (message.`is`(ShoppingCartMessages.GET_CART_RESPONSE)) {
+            // STEP 2: Receive shopping cart contents, and send retract stock messages to product functions
             val getCartResponse = message.`as`(ShoppingCartMessages.GET_CART_RESPONSE)
             logger.info { "Order ${context.self().id()} - Received shopping cart contents from ${getCartResponse.cartId}" }
             logger.info { "Order ${context.self().id()} - Contents: ${getCartResponse.contents}" }
@@ -77,29 +80,49 @@ class OrderFn : LoggedStatefulFunction() {
         }
 
         if (message.`is`(ProductMessages.RETRACT_STOCK_RESPONSE)) {
+            // STEP 3: Receive responses from product functions, check if all are received, and send retract credit message to user service
             val retractStockResponse = message.`as`(ProductMessages.RETRACT_STOCK_RESPONSE)
             logger.info { "Order ${context.self().id()} - Received retract stock response from ${retractStockResponse.productId}" }
 
             val storage = context.storage()
             val order = storage.get(ORDER).get()
 
-            order.products[retractStockResponse.productId]!!.stockRetracted = true
+            order.products[retractStockResponse.productId]!!.responseReceived = true
+            order.products[retractStockResponse.productId]!!.retractSuccessful = retractStockResponse.success
             order.products[retractStockResponse.productId]!!.price = retractStockResponse.price
 
             // Check if all stock retracted
-            if (order.products.values.fold(true) { acc, orderProduct -> acc && orderProduct.stockRetracted }) {
-                logger.info { "Order ${context.self().id()} - All stock retracted" }
-                val totalPrice = order.products.values.fold(0) { acc, orderProduct -> acc + orderProduct.amount * orderProduct.price!! }
+            if (order.products.values.all { orderProduct -> orderProduct.responseReceived }) {
+                logger.info { "Order ${context.self().id()} - All responses from orderProducts received" }
 
-                val retractCreditMessage = MessageBuilder.forAddress(UserFn.TYPE, order.userId)
-                    .withCustomType(UserMessages.RETRACT_CREDIT, RetractCredit(order.userId, totalPrice))
-                    .build()
+                if (order.products.values.any {orderProduct -> !orderProduct.retractSuccessful}) {
+                    // Roll back stock changes if there was not enough stock of at least one item in cart
+                    logger.info { "Order ${context.self().id()} - Not all retract stock operations were successful" }
+                    logger.info { "Order ${context.self().id()} - Rolling back stock changes" }
 
-                logger.info { "Order ${context.self().id()} - Retracting total order price ($totalPrice) from user ${order.userId}" }
+                    order.products.filter {entry -> entry.value.retractSuccessful }.forEach { entry -> run {
+                        val addStockMessage = MessageBuilder
+                            .forAddress(ProductFn.TYPE, entry.key)
+                            .withCustomType(ProductMessages.ADD_STOCK, AddStock(entry.key, entry.value.amount))
+                            .build()
 
-                context.send(retractCreditMessage)
+                        logger.info { "Order ${context.self().id()} - Sending add stock message to ${entry.key}" }
+                        context.send(addStockMessage)
 
-                order.status = "STOCK_RETRACTED"
+                        order.status = "FAILED"
+                    } }
+                } else {
+                    val totalPrice = order.products.values.fold(0) { acc, orderProduct -> acc + orderProduct.amount * orderProduct.price!! }
+
+                    val retractCreditMessage = MessageBuilder.forAddress(UserFn.TYPE, order.userId)
+                        .withCustomType(UserMessages.RETRACT_CREDIT, RetractCredit(order.userId, totalPrice))
+                        .build()
+
+                    logger.info { "Order ${context.self().id()} - Retracting total order price ($totalPrice) from user ${order.userId}" }
+
+                    context.send(retractCreditMessage)
+                    order.status = "STOCK_RETRACTED"
+                }
             }
 
             storage.set(ORDER, order);
@@ -107,11 +130,11 @@ class OrderFn : LoggedStatefulFunction() {
         }
 
         if (message.`is`(UserMessages.RETRACT_CREDIT_RESPONSE)) {
+            // STEP 4: Receive retract credit response from user function, and set the checkout to completed
             val retractCreditResponse = message.`as`(UserMessages.RETRACT_CREDIT_RESPONSE)
             logger.info { "Order ${context.self().id()} - Received retract credit response from ${retractCreditResponse.userId}" }
             logger.info { "Order ${context.self().id()} - Checkout completed" }
 
-            // TODO: Send receipt egress message
             val storage = context.storage()
             val order = storage.get(ORDER).get()
 
@@ -127,6 +150,6 @@ class OrderFn : LoggedStatefulFunction() {
         companion object {
             val TYPE = createJsonType("order", Order::class)
         }
-        class OrderProduct(val amount: Int, var stockRetracted: Boolean = false, var price: Int? = null)
+        class OrderProduct(val amount: Int, var responseReceived: Boolean = false, var price: Int? = null, var retractSuccessful: Boolean = false)
     }
 }
