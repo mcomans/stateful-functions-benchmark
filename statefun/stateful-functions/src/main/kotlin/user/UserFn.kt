@@ -45,11 +45,14 @@ class UserFn : LoggedStatefulFunction() {
             val storage = context.storage()
             val user = storage.get(USER).orElse(User(0))
 
-            user.credit = max(user.credit - retractCreditMessage.amount, 0)
+            var success = false
+            if (user.credit - retractCreditMessage.amount >= 0) {
+                user.credit = user.credit - retractCreditMessage.amount
+                success = true
+            }
 
             logger.info { "User ${context.self().id()} - New amount of credit: ${user.credit}"}
 
-            // TODO: Check if user has enough credit?
             storage.set(USER, user)
 
             if (context.caller().isPresent) {
@@ -58,11 +61,11 @@ class UserFn : LoggedStatefulFunction() {
                     .forAddress(caller.type(), caller.id())
                     .withCustomType(UserMessages.RETRACT_CREDIT_RESPONSE, RetractCreditResponse(
                         context.self().id(),
-                        true
+                        success
                     ))
                     .build()
 
-                logger.info { "User ${context.self().id()} - Sending successful response to caller ${caller.type().asTypeNameString()}/${caller.id()}" }
+                logger.info { "User ${context.self().id()} - Sending ${if (success) "successful" else "failed"} response to caller ${caller.type().asTypeNameString()}/${caller.id()}" }
                 context.send(response)
             }
 
