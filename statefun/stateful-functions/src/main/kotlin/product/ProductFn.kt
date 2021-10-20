@@ -47,13 +47,17 @@ class ProductFn : LoggedStatefulFunction() {
 
                 val storage = context.storage()
                 val product = storage.get(PRODUCT).orElse(Product(0, 0))
-                val newStock = max(product.stock - retractStockMessage.amount, 0)
+                var success = false
+                var newStock = product.stock
 
-                // TODO: Check if enough stock is available?
+                if (product.stock - retractStockMessage.amount >= 0) {
+                    newStock = max(product.stock - retractStockMessage.amount, 0)
+                    success = true
+                }
 
                 storage.set(PRODUCT, Product(product.price, newStock))
 
-                logger.info { "Product ${retractStockMessage.productId} - New amount of stock: ${newStock}" }
+                logger.info { "Product ${retractStockMessage.productId} - New amount of stock: $newStock" }
 
                 if (context.caller().isPresent) {
                     val caller = context.caller().get()
@@ -63,13 +67,13 @@ class ProductFn : LoggedStatefulFunction() {
                             ProductMessages.RETRACT_STOCK_RESPONSE,
                             RetractStockResponse(
                                 retractStockMessage.productId,
-                                true,
+                                success,
                                 retractStockMessage.amount,
                                 product.price
                             )
                         )
                         .build()
-                    logger.info { "Product ${retractStockMessage.productId} - Sending successful response to caller ${caller.type().asTypeNameString()}/${caller.id()}" }
+                    logger.info { "Product ${retractStockMessage.productId} - Sending ${if (success) "successful" else "failed"} response to caller ${caller.type().asTypeNameString()}/${caller.id()}" }
                     context.send(responseMessage)
                 }
 
