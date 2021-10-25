@@ -1,3 +1,5 @@
 package types.product
 
-class AddStock(val productId: String, val amount: Int)
+import java.util.*
+
+class AddStock(val amount: Int, val requestId: String = UUID.randomUUID().toString())

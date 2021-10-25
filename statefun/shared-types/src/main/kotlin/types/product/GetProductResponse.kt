@@ -1,3 +1,5 @@
 package types.product
 
-class GetProductResponse(val productId: String, val price: Int, val stock: Int)
+import java.util.*
+
+class GetProductResponse(val price: Int, val stock: Int, val requestId: String = UUID.randomUUID().toString())

@@ -1,3 +1,5 @@
 package types.product
 
-class RetractStock (val productId: String, val amount: Int)
+import java.util.*
+
+class RetractStock (val amount: Int, val requestId: String = UUID.randomUUID().toString())

@@ -1,3 +1,5 @@
 package types.order
 
-class Checkout(val orderId: String, val shoppingCartId: String, val userId: String)
+import java.util.*
+
+class Checkout(val shoppingCartId: String, val userId: String, val requestId: String = UUID.randomUUID().toString())

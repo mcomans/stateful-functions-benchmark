@@ -1,3 +1,5 @@
 package types.user
 
-class RetractCredit(val userId: String, val amount: Int)
+import java.util.*
+
+class RetractCredit(val amount: Int, val requestId: String = UUID.randomUUID().toString())

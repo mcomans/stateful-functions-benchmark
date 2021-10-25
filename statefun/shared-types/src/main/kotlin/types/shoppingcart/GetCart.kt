@@ -1,3 +1,5 @@
 package types.shoppingcart
 
-class GetCart(val cartId: String)
+import java.util.*
+
+class GetCart(val requestId: String = UUID.randomUUID().toString())

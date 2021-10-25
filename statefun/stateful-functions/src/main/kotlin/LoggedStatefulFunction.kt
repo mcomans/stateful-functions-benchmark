@@ -16,6 +16,8 @@ abstract class LoggedStatefulFunction : StatefulFunction {
             "caller_id" to (context.caller().orElse(null)?.id() ?: "none"),
             "message_type" to message.valueTypeName().asTypeNameString()) {
 
+
+
             logger.info { "INCOMING_CALL" }
 
             val result = invoke(context, message)

@@ -69,7 +69,6 @@ class ShoppingCartFn : LoggedStatefulFunction() {
             if (cart.isPresent && context.caller().isPresent) {
                 val caller = context.caller().get()
                 val response = GetCartResponse(
-                    getCartMessage.cartId,
                     cart.get().contents.map { entry -> GetCartResponse.CartResponseProduct(entry.key, entry.value) })
                 val responseMessage = MessageBuilder.forAddress(caller.type(), caller.id())
                     .withCustomType(ShoppingCartMessages.GET_CART_RESPONSE, response).build()

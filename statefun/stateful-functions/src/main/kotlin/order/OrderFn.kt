@@ -35,26 +35,26 @@ class OrderFn : LoggedStatefulFunction() {
             // STEP 1: Send message to shopping cart function to receive contents of cart
             val checkoutMessage = message.`as`(OrderMessages.CHECKOUT)
 
-            logger.info { "Order ${checkoutMessage.orderId} - Checkout starting (shopping cart: ${checkoutMessage.shoppingCartId}, user: ${checkoutMessage.userId})" }
+            logger.info { "Order ${context.self().id()} - Checkout starting (shopping cart: ${checkoutMessage.shoppingCartId}, user: ${checkoutMessage.userId})" }
 
             val getShoppingCartMessage = MessageBuilder
                 .forAddress(Address(ShoppingCartFn.TYPE, checkoutMessage.shoppingCartId))
                 .withCustomType(ShoppingCartMessages.GET_CART, GetCart(checkoutMessage.shoppingCartId))
                 .build()
 
-            logger.info { "Order ${checkoutMessage.orderId} - Requesting shopping cart contents from ${checkoutMessage.shoppingCartId}" }
+            logger.info { "Order ${context.self().id()} - Requesting shopping cart contents from ${checkoutMessage.shoppingCartId}" }
             context.send(getShoppingCartMessage)
 
             val storage = context.storage()
 
-            storage.set(ORDER, Order(checkoutMessage.userId,"STARTED", HashMap<String, Order.OrderProduct>()))
+            storage.set(ORDER, Order(checkoutMessage.userId,"STARTED", HashMap()))
             return context.done()
         }
 
         if (message.`is`(ShoppingCartMessages.GET_CART_RESPONSE)) {
             // STEP 2: Receive shopping cart contents, and send retract stock messages to product functions
             val getCartResponse = message.`as`(ShoppingCartMessages.GET_CART_RESPONSE)
-            logger.info { "Order ${context.self().id()} - Received shopping cart contents from ${getCartResponse.cartId}" }
+            logger.info { "Order ${context.self().id()} - Received shopping cart contents from ${context.caller().get().id()}" }
             logger.info { "Order ${context.self().id()} - Contents: ${getCartResponse.contents}" }
 
             val storage = context.storage()
@@ -65,7 +65,7 @@ class OrderFn : LoggedStatefulFunction() {
 
                 val retractStockMessage = MessageBuilder
                     .forAddress(ProductFn.TYPE, product.productId)
-                    .withCustomType(ProductMessages.RETRACT_STOCK, RetractStock(product.productId, product.amount))
+                    .withCustomType(ProductMessages.RETRACT_STOCK, RetractStock(product.amount))
                     .build()
 
                 logger.info { "Order ${context.self().id()} - Sending retract stock message to ${product.productId}" }
@@ -82,14 +82,15 @@ class OrderFn : LoggedStatefulFunction() {
         if (message.`is`(ProductMessages.RETRACT_STOCK_RESPONSE)) {
             // STEP 3: Receive responses from product functions, check if all are received, and send retract credit message to user service
             val retractStockResponse = message.`as`(ProductMessages.RETRACT_STOCK_RESPONSE)
-            logger.info { "Order ${context.self().id()} - Received retract stock response from ${retractStockResponse.productId}" }
+            val productId = context.caller().get().id()
+            logger.info { "Order ${context.self().id()} - Received retract stock response from $productId" }
 
             val storage = context.storage()
             val order = storage.get(ORDER).get()
 
-            order.products[retractStockResponse.productId]!!.responseReceived = true
-            order.products[retractStockResponse.productId]!!.retractSuccessful = retractStockResponse.success
-            order.products[retractStockResponse.productId]!!.price = retractStockResponse.price
+            order.products[productId]!!.responseReceived = true
+            order.products[productId]!!.retractSuccessful = retractStockResponse.success
+            order.products[productId]!!.price = retractStockResponse.price
 
             // Check if all stock retracted
             if (order.products.values.all { orderProduct -> orderProduct.responseReceived }) {
@@ -105,7 +106,7 @@ class OrderFn : LoggedStatefulFunction() {
                     val totalPrice = order.products.values.fold(0) { acc, orderProduct -> acc + orderProduct.amount * orderProduct.price!! }
 
                     val retractCreditMessage = MessageBuilder.forAddress(UserFn.TYPE, order.userId)
-                        .withCustomType(UserMessages.RETRACT_CREDIT, RetractCredit(order.userId, totalPrice))
+                        .withCustomType(UserMessages.RETRACT_CREDIT, RetractCredit(totalPrice))
                         .build()
 
                     logger.info { "Order ${context.self().id()} - Retracting total order price ($totalPrice) from user ${order.userId}" }
@@ -115,14 +116,14 @@ class OrderFn : LoggedStatefulFunction() {
                 }
             }
 
-            storage.set(ORDER, order);
-            return context.done();
+            storage.set(ORDER, order)
+            return context.done()
         }
 
         if (message.`is`(UserMessages.RETRACT_CREDIT_RESPONSE)) {
             // STEP 4: Receive retract credit response from user function, and set the checkout to completed
             val retractCreditResponse = message.`as`(UserMessages.RETRACT_CREDIT_RESPONSE)
-            logger.info { "Order ${context.self().id()} - Received retract credit response from ${retractCreditResponse.userId}" }
+            logger.info { "Order ${context.self().id()} - Received retract credit response from ${context.caller().get().id()}" }
 
             val storage = context.storage()
             val order = storage.get(ORDER).get()
@@ -145,7 +146,7 @@ class OrderFn : LoggedStatefulFunction() {
     private fun rollbackStock(entry: Map.Entry<String, Order.OrderProduct>, context: Context) {
         val addStockMessage = MessageBuilder
             .forAddress(ProductFn.TYPE, entry.key)
-            .withCustomType(ProductMessages.ADD_STOCK, AddStock(entry.key, entry.value.amount))
+            .withCustomType(ProductMessages.ADD_STOCK, AddStock(entry.value.amount))
             .build()
 
         logger.info { "Order ${context.self().id()} - Sending add stock message to ${entry.key}" }

@@ -1,3 +1,5 @@
 package types.product
 
-class SetPrice(val productId: String, val price: Int)
+import java.util.*
+
+class SetPrice(val price: Int, val requestId: String = UUID.randomUUID().toString())

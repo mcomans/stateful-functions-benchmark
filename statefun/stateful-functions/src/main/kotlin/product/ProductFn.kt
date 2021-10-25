@@ -27,7 +27,7 @@ class ProductFn : LoggedStatefulFunction() {
             if (message.`is`(ProductMessages.ADD_STOCK)) {
                 val addStockMessage = message.`as`(ProductMessages.ADD_STOCK)
 
-                logger.info { "Product ${addStockMessage.productId} - Adding ${addStockMessage.amount} of stock"}
+                logger.info { "Product ${context.self().id()} - Adding ${addStockMessage.amount} of stock"}
 
                 val storage = context.storage()
                 val product = storage.get(PRODUCT).orElse(Product(0, 0))
@@ -35,7 +35,7 @@ class ProductFn : LoggedStatefulFunction() {
 
                 storage.set(PRODUCT, product)
 
-                logger.info { "Product ${addStockMessage.productId} - New amount of stock: ${product.stock}" }
+                logger.info { "Product ${context.self().id()} - New amount of stock: ${product.stock}" }
 
                 return context.done()
             }
@@ -43,7 +43,7 @@ class ProductFn : LoggedStatefulFunction() {
             if (message.`is`(ProductMessages.RETRACT_STOCK)) {
                 val retractStockMessage = message.`as`(ProductMessages.RETRACT_STOCK)
 
-                logger.info { "Product ${retractStockMessage.productId} - Retracting ${retractStockMessage.amount} of stock"}
+                logger.info { "Product ${context.self().id()} - Retracting ${retractStockMessage.amount} of stock"}
 
                 val storage = context.storage()
                 val product = storage.get(PRODUCT).orElse(Product(0, 0))
@@ -56,7 +56,7 @@ class ProductFn : LoggedStatefulFunction() {
 
                 storage.set(PRODUCT, product)
 
-                logger.info { "Product ${retractStockMessage.productId} - New amount of stock: ${product.stock}" }
+                logger.info { "Product ${context.self().id()} - New amount of stock: ${product.stock}" }
 
                 if (context.caller().isPresent) {
                     val caller = context.caller().get()
@@ -65,14 +65,13 @@ class ProductFn : LoggedStatefulFunction() {
                         .withCustomType(
                             ProductMessages.RETRACT_STOCK_RESPONSE,
                             RetractStockResponse(
-                                retractStockMessage.productId,
                                 success,
                                 retractStockMessage.amount,
                                 product.price
                             )
                         )
                         .build()
-                    logger.info { "Product ${retractStockMessage.productId} - Sending ${if (success) "successful" else "failed"} response to caller ${caller.type().asTypeNameString()}/${caller.id()}" }
+                    logger.info { "Product ${context.self().id()} - Sending ${if (success) "successful" else "failed"} response to caller ${caller.type().asTypeNameString()}/${caller.id()}" }
                     context.send(responseMessage)
                 }
 
@@ -87,7 +86,7 @@ class ProductFn : LoggedStatefulFunction() {
                 product.price = setPriceMessage.price
                 storage.set(PRODUCT, product)
 
-                logger.info { "Product ${setPriceMessage.productId} - Price set to: ${setPriceMessage.price}" }
+                logger.info { "Product ${context.self().id()} - Price set to: ${setPriceMessage.price}" }
 
                 return context.done()
             }

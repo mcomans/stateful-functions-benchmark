@@ -60,7 +60,6 @@ class UserFn : LoggedStatefulFunction() {
                 val response = MessageBuilder
                     .forAddress(caller.type(), caller.id())
                     .withCustomType(UserMessages.RETRACT_CREDIT_RESPONSE, RetractCreditResponse(
-                        context.self().id(),
                         success
                     ))
                     .build()
