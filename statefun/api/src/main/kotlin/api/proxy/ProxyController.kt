@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController()
 @RequestMapping("/proxy")
-class ProxyController(val kafkaTemplate: KafkaTemplate<String, String>) {
+class ProxyController(val kafkaTemplate: KafkaTemplate<String, Any>) {
 
     @PostMapping("")
     fun forwardToKafka(@RequestBody message: Message) {

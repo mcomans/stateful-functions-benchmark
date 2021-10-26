@@ -1,6 +1,5 @@
 package api
 
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties
 import org.springframework.boot.runApplication
@@ -19,12 +18,12 @@ class ApiApplication(private val kafkaProperties: KafkaProperties) {
     }
 
     @Bean
-    fun producerFactory(): ProducerFactory<String, String> {
+    fun producerFactory(): ProducerFactory<String, Any> {
         return DefaultKafkaProducerFactory(producerConfigs())
     }
 
     @Bean
-    fun kafkaTemplate(): KafkaTemplate<String, String> {
+    fun kafkaTemplate(): KafkaTemplate<String, Any> {
         return KafkaTemplate(producerFactory())
     }
 }

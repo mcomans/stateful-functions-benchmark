@@ -1,5 +1,3 @@
 package types.product
 
-import java.util.*
-
-class GetProduct(val requestId: String = UUID.randomUUID().toString())
+class GetProduct(val requestId: String)

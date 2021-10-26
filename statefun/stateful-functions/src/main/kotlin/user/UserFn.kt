@@ -10,7 +10,6 @@ import org.apache.flink.statefun.sdk.java.ValueSpec
 import org.apache.flink.statefun.sdk.java.message.Message
 import org.apache.flink.statefun.sdk.java.message.MessageBuilder
 import types.user.RetractCreditResponse
-import java.lang.Integer.max
 import java.util.concurrent.CompletableFuture
 
 val logger = KotlinLogging.logger {}
@@ -60,7 +59,8 @@ class UserFn : LoggedStatefulFunction() {
                 val response = MessageBuilder
                     .forAddress(caller.type(), caller.id())
                     .withCustomType(UserMessages.RETRACT_CREDIT_RESPONSE, RetractCreditResponse(
-                        success
+                        success,
+                        retractCreditMessage.requestId
                     ))
                     .build()
 

@@ -67,7 +67,8 @@ class ProductFn : LoggedStatefulFunction() {
                             RetractStockResponse(
                                 success,
                                 retractStockMessage.amount,
-                                product.price
+                                product.price,
+                                retractStockMessage.requestId
                             )
                         )
                         .build()
