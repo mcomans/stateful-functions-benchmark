@@ -1,3 +1,5 @@
 package types.product
 
-class GetProductResponse(val price: Int, val stock: Int, val requestId: String)
+import types.WrappedMessage
+
+class GetProductResponse(val price: Int, val stock: Int) : WrappedMessage

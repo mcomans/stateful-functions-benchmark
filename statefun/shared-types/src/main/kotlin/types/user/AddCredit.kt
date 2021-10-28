@@ -1,3 +1,5 @@
 package types.user
 
-class AddCredit(val amount: Int, val requestId: String)
+import types.WrappedMessage
+
+class AddCredit(val amount: Int) : WrappedMessage

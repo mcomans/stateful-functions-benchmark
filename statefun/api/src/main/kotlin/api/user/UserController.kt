@@ -3,6 +3,7 @@ package api.user
 import api.logging.RequestInfo
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.web.bind.annotation.*
+import types.MessageWrapper
 import types.user.AddCredit
 import java.util.*
 
@@ -15,7 +16,7 @@ class UserController(val kafkaTemplate: KafkaTemplate<String, Any>, val requestI
         val userId = UUID.randomUUID().toString()
 
         if (user?.credits != null) {
-            kafkaTemplate.send("add-credit", userId, AddCredit(user.credits, requestInfo.requestId))
+            kafkaTemplate.send("add-credit", userId, MessageWrapper(requestInfo.requestId, AddCredit(user.credits)))
         }
 
         return userId
@@ -24,7 +25,7 @@ class UserController(val kafkaTemplate: KafkaTemplate<String, Any>, val requestI
     @PatchMapping("/{userId}/credits/add")
     fun addCredit(@PathVariable userId: String, @RequestBody user: User) {
         if (user.credits != null) {
-            kafkaTemplate.send("add-credit", userId, AddCredit(user.credits, requestInfo.requestId))
+            kafkaTemplate.send("add-credit", userId, MessageWrapper(requestInfo.requestId, AddCredit(user.credits)))
         }
     }
 

@@ -1,3 +1,5 @@
 package types.product
 
-class SetPrice(val price: Int, val requestId: String)
+import types.WrappedMessage
+
+class SetPrice(val price: Int) : WrappedMessage

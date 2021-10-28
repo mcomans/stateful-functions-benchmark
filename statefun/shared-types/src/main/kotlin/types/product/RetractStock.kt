@@ -1,3 +1,5 @@
 package types.product
 
-class RetractStock(val amount: Int, val requestId: String)
+import types.WrappedMessage
+
+class RetractStock(val amount: Int) : WrappedMessage

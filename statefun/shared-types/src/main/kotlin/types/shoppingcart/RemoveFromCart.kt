@@ -1,3 +1,5 @@
 package types.shoppingcart
 
-class RemoveFromCart(val productId: String, val amount: Int, val requestId: String)
+import types.WrappedMessage
+
+class RemoveFromCart(val productId: String, val amount: Int) : WrappedMessage

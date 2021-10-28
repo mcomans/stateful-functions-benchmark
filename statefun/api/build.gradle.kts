@@ -23,6 +23,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.springframework.kafka:spring-kafka")
+    implementation("net.logstash.logback:logstash-logback-encoder:6.6")
 }
 
 tasks.withType<KotlinCompile> {

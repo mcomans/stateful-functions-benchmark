@@ -1,4 +1,10 @@
 <configuration>
+    <logger name="org.xnio.nio" additivity="false"/>
+    <logger name="org.xnio.nio.selector" additivity="false"/>
+    <logger name="io.undertow" additivity="false"/>
+    <logger name="org.xnio.listener" additivity="false"/>
+    <logger name="org.xnio.safe-close" additivity="false" />
+
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
             <providers>

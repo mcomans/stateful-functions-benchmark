@@ -1,3 +1,5 @@
 package types.user
 
-class RetractCreditResponse(val success: Boolean, val requestId: String)
+import types.WrappedMessage
+
+class RetractCreditResponse(val success: Boolean) : WrappedMessage

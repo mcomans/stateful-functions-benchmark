@@ -1,3 +1,5 @@
 package types.product
 
-class AddStock(val amount: Int, val requestId: String)
+import types.WrappedMessage
+
+class AddStock(val amount: Int) : WrappedMessage

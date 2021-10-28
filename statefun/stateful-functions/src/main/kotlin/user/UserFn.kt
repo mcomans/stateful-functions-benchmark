@@ -2,13 +2,17 @@ package user
 
 import LoggedStatefulFunction
 import createJsonType
+import messages.BenchmarkMessages
 import mu.KotlinLogging
 import org.apache.flink.statefun.sdk.java.Context
 import org.apache.flink.statefun.sdk.java.StatefulFunctionSpec
 import org.apache.flink.statefun.sdk.java.TypeName
 import org.apache.flink.statefun.sdk.java.ValueSpec
-import org.apache.flink.statefun.sdk.java.message.Message
 import org.apache.flink.statefun.sdk.java.message.MessageBuilder
+import types.MessageWrapper
+import types.WrappedMessage
+import types.user.AddCredit
+import types.user.RetractCredit
 import types.user.RetractCreditResponse
 import java.util.concurrent.CompletableFuture
 
@@ -21,59 +25,63 @@ class UserFn : LoggedStatefulFunction() {
         val SPEC = StatefulFunctionSpec.builder(TYPE).withValueSpec(USER).withSupplier(::UserFn).build()
     }
 
-    override fun invoke(context: Context, message: Message): CompletableFuture<Void> {
-        if (message.`is`(UserMessages.ADD_CREDIT)) {
-            val addCreditMessage = message.`as`(UserMessages.ADD_CREDIT)
-            logger.info { "User ${context.self().id()} - Adding ${addCreditMessage.amount} credit"}
-
-            val storage = context.storage()
-            val user = storage.get(USER).orElse(User(0))
-
-            user.credit = user.credit + addCreditMessage.amount
-
-            logger.info { "User ${context.self().id()} - New amount of credit: ${user.credit}"}
-
-            storage.set(USER, user)
-            return context.done()
+    override fun invoke(context: Context, requestId: String, message: WrappedMessage): CompletableFuture<Void> {
+        when (message) {
+            is AddCredit -> handleAddCredit(context, message)
+            is RetractCredit -> handleRetractCredit(context, requestId, message)
         }
-
-        if (message.`is`(UserMessages.RETRACT_CREDIT)) {
-            val retractCreditMessage = message.`as`(UserMessages.RETRACT_CREDIT)
-
-            logger.info { "User ${context.self().id()} - Retracting ${retractCreditMessage.amount} credit"}
-            val storage = context.storage()
-            val user = storage.get(USER).orElse(User(0))
-
-            var success = false
-            if (user.credit - retractCreditMessage.amount >= 0) {
-                user.credit = user.credit - retractCreditMessage.amount
-                success = true
-            }
-
-            logger.info { "User ${context.self().id()} - New amount of credit: ${user.credit}"}
-
-            storage.set(USER, user)
-
-            if (context.caller().isPresent) {
-                val caller = context.caller().get()
-                val response = MessageBuilder
-                    .forAddress(caller.type(), caller.id())
-                    .withCustomType(UserMessages.RETRACT_CREDIT_RESPONSE, RetractCreditResponse(
-                        success,
-                        retractCreditMessage.requestId
-                    ))
-                    .build()
-
-                logger.info { "User ${context.self().id()} - Sending ${if (success) "successful" else "failed"} response to caller ${caller.type().asTypeNameString()}/${caller.id()}" }
-                context.send(response)
-            }
-
-            return context.done()
-        }
-
-
 
         return context.done()
+    }
+
+    private fun handleAddCredit(context: Context, message: AddCredit) {
+        logger.info { "User ${context.self().id()} - Adding ${message.amount} credit" }
+
+        val storage = context.storage()
+        val user = storage.get(USER).orElse(User(0))
+
+        user.credit = user.credit + message.amount
+
+        logger.info { "User ${context.self().id()} - New amount of credit: ${user.credit}" }
+
+        storage.set(USER, user)
+    }
+
+    private fun handleRetractCredit(context: Context, requestId: String, message: RetractCredit) {
+        logger.info { "User ${context.self().id()} - Retracting ${message.amount} credit" }
+        val storage = context.storage()
+        val user = storage.get(USER).orElse(User(0))
+
+        var success = false
+        if (user.credit - message.amount >= 0) {
+            user.credit = user.credit - message.amount
+            success = true
+        }
+
+        logger.info { "User ${context.self().id()} - New amount of credit: ${user.credit}" }
+
+        storage.set(USER, user)
+
+        if (context.caller().isPresent) {
+            val caller = context.caller().get()
+            val response = MessageBuilder
+                .forAddress(caller.type(), caller.id())
+                .withCustomType(
+                    BenchmarkMessages.WRAPPER_MESSAGE, MessageWrapper(requestId, RetractCreditResponse(
+                        success
+                    ))
+                )
+                .build()
+
+            logger.info {
+                "User ${
+                    context.self().id()
+                } - Sending ${if (success) "successful" else "failed"} response to caller ${
+                    caller.type().asTypeNameString()
+                }/${caller.id()}"
+            }
+            context.send(response)
+        }
     }
 
     class User(var credit: Int) {

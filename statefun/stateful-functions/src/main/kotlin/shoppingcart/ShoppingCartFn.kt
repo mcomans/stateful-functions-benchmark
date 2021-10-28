@@ -2,11 +2,19 @@ package shoppingcart
 
 import LoggedStatefulFunction
 import createJsonType
+import messages.BenchmarkMessages
 import mu.KotlinLogging
-import org.apache.flink.statefun.sdk.java.*
-import org.apache.flink.statefun.sdk.java.message.Message
+import org.apache.flink.statefun.sdk.java.Context
+import org.apache.flink.statefun.sdk.java.StatefulFunctionSpec
+import org.apache.flink.statefun.sdk.java.TypeName
+import org.apache.flink.statefun.sdk.java.ValueSpec
 import org.apache.flink.statefun.sdk.java.message.MessageBuilder
+import types.MessageWrapper
+import types.WrappedMessage
+import types.shoppingcart.AddToCart
+import types.shoppingcart.GetCart
 import types.shoppingcart.GetCartResponse
+import types.shoppingcart.RemoveFromCart
 import java.util.concurrent.CompletableFuture
 
 private val logger = KotlinLogging.logger {}
@@ -21,66 +29,64 @@ class ShoppingCartFn : LoggedStatefulFunction() {
             .withSupplier(::ShoppingCartFn)
     }
 
-    override fun invoke(context: Context, message: Message): CompletableFuture<Void> {
-        // Add to cart function
-        if (message.`is`(ShoppingCartMessages.ADD_TO_CART)) {
-            val addToCartMessage = message.`as`(ShoppingCartMessages.ADD_TO_CART)
-            logger.info { "Shopping cart ${context.self().id()} - Adding ${addToCartMessage.productId} to shopping cart" }
-
-            val storage = context.storage()
-
-            val cart = storage.get(SHOPPING_CART).orElse(ShoppingCart(HashMap()))
-            val productAmountInCart = cart.contents[addToCartMessage.productId] ?: 0
-            cart.contents[addToCartMessage.productId] = productAmountInCart + addToCartMessage.amount
-            logger.info { "Shopping cart ${context.self().id()} - Cart contents: ${cart.contents}" }
-            storage.set(SHOPPING_CART, cart)
-
-            return context.done()
-        }
-
-        // Remove from cart function
-        if (message.`is`(ShoppingCartMessages.REMOVE_FROM_CART)) {
-            val removeFromCartMessage = message.`as`(ShoppingCartMessages.REMOVE_FROM_CART)
-
-            val storage = context.storage()
-            val cart = storage.get(SHOPPING_CART).orElse(ShoppingCart(HashMap()))
-            if (cart.contents.contains(removeFromCartMessage.productId)) {
-                val productAmountInCart = cart.contents[removeFromCartMessage.productId] ?: 0
-                val newAmount = productAmountInCart - 1
-
-                if (newAmount > 0) {
-                    cart.contents[removeFromCartMessage.productId] = newAmount
-                } else {
-                    cart.contents.remove(removeFromCartMessage.productId)
-                }
-                logger.info { "Shopping cart ${context.self().id()} - Cart contents: ${cart.contents}" }
-                storage.set(SHOPPING_CART, cart)
-            }
-
-            return context.done()
-        }
-
-        if (message.`is`(ShoppingCartMessages.GET_CART)) {
-            val getCartMessage = message.`as`(ShoppingCartMessages.GET_CART)
-
-            val storage = context.storage()
-            val cart = storage.get(SHOPPING_CART)
-
-            if (cart.isPresent && context.caller().isPresent) {
-                val caller = context.caller().get()
-                val response = GetCartResponse(
-                    cart.get().contents.map { entry -> GetCartResponse.CartResponseProduct(entry.key, entry.value) }, getCartMessage.requestId)
-                val responseMessage = MessageBuilder.forAddress(caller.type(), caller.id())
-                    .withCustomType(ShoppingCartMessages.GET_CART_RESPONSE, response).build()
-
-                logger.info { "Shopping cart ${context.self().id()} - Sending GetCartResponse to caller with type ${caller.type()} and id ${caller.id()}"}
-                context.send(responseMessage)
-            }
-
-            return context.done()
+    override fun invoke(context: Context, requestId: String, message: WrappedMessage): CompletableFuture<Void> {
+        when (message) {
+            is AddToCart -> handleAddToCart(context, message)
+            is RemoveFromCart -> handleRemoveFromCart(context, message)
+            is GetCart -> handleGetCart(context, requestId)
         }
 
         return context.done()
+    }
+
+    private fun handleAddToCart(context: Context, message: AddToCart) {
+        logger.info {
+            "Shopping cart ${
+                context.self().id()
+            } - Adding ${message.productId} to shopping cart"
+        }
+
+        val storage = context.storage()
+
+        val cart = storage.get(SHOPPING_CART).orElse(ShoppingCart(HashMap()))
+        val productAmountInCart = cart.contents[message.productId] ?: 0
+        cart.contents[message.productId] = productAmountInCart + message.amount
+        logger.info { "Shopping cart ${context.self().id()} - Cart contents: ${cart.contents}" }
+        storage.set(SHOPPING_CART, cart)
+    }
+
+    private fun handleRemoveFromCart(context: Context, message: RemoveFromCart) {
+        val storage = context.storage()
+        val cart = storage.get(SHOPPING_CART).orElse(ShoppingCart(HashMap()))
+        if (cart.contents.contains(message.productId)) {
+            val productAmountInCart = cart.contents[message.productId] ?: 0
+            val newAmount = productAmountInCart - 1
+
+            if (newAmount > 0) {
+                cart.contents[message.productId] = newAmount
+            } else {
+                cart.contents.remove(message.productId)
+            }
+            logger.info { "Shopping cart ${context.self().id()} - Cart contents: ${cart.contents}" }
+            storage.set(SHOPPING_CART, cart)
+        }
+    }
+
+    private fun handleGetCart(context: Context, requestId: String) {
+        val storage = context.storage()
+        val cart = storage.get(SHOPPING_CART)
+
+        if (cart.isPresent && context.caller().isPresent) {
+            val caller = context.caller().get()
+            val response = MessageWrapper(requestId, GetCartResponse(
+                cart.get().contents.map { entry -> GetCartResponse.CartResponseProduct(entry.key, entry.value) }))
+
+            val responseMessage = MessageBuilder.forAddress(caller.type(), caller.id())
+                .withCustomType(BenchmarkMessages.WRAPPER_MESSAGE, response).build()
+
+            logger.info { "Shopping cart ${context.self().id()} - Sending GetCartResponse to caller with type ${caller.type()} and id ${caller.id()}"}
+            context.send(responseMessage)
+        }
     }
 
     class ShoppingCart(val contents: MutableMap<String, Int>) {

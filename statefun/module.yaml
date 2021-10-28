@@ -21,7 +21,7 @@ module:
             consumerGroupId: benchmark
             topics:
               - topic: add-to-cart
-                valueType: shoppingcart/AddToCart
+                valueType: benchmark/MessageWrapper
                 targets:
                   - benchmark/shopping-cart
       - ingress:
@@ -33,7 +33,7 @@ module:
             consumerGroupId: benchmark
             topics:
               - topic: remove-from-cart
-                valueType: shoppingcart/RemoveFromCart
+                valueType: benchmark/MessageWrapper
                 targets:
                   - benchmark/shopping-cart
       - ingress:
@@ -45,7 +45,7 @@ module:
             consumerGroupId: benchmark
             topics:
               - topic: add-credit
-                valueType: user/AddCredit
+                valueType: benchmark/MessageWrapper
                 targets:
                   - benchmark/user
       - ingress:
@@ -57,7 +57,7 @@ module:
             consumerGroupId: benchmark
             topics:
               - topic: add-stock
-                valueType: product/AddStock
+                valueType: benchmark/MessageWrapper
                 targets:
                   - benchmark/product
       - ingress:
@@ -69,7 +69,7 @@ module:
             consumerGroupId: benchmark
             topics:
               - topic: set-price
-                valueType: product/SetPrice
+                valueType: benchmark/MessageWrapper
                 targets:
                   - benchmark/product
       - ingress:
@@ -81,6 +81,6 @@ module:
             consumerGroupId: benchmark
             topics:
               - topic: checkout
-                valueType: order/Checkout
+                valueType: benchmark/MessageWrapper
                 targets:
                   - benchmark/order

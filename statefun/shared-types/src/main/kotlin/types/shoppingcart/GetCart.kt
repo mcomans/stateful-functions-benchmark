@@ -1,3 +1,5 @@
 package types.shoppingcart
 
-class GetCart(val requestId: String)
+import types.WrappedMessage
+
+class GetCart() : WrappedMessage

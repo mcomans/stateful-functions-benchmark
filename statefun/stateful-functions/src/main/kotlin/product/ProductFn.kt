@@ -2,12 +2,18 @@ package product
 
 import LoggedStatefulFunction
 import createJsonType
+import messages.BenchmarkMessages
 import mu.KotlinLogging
 import mu.withLoggingContext
 import org.apache.flink.statefun.sdk.java.*
 import org.apache.flink.statefun.sdk.java.message.Message
 import org.apache.flink.statefun.sdk.java.message.MessageBuilder
+import types.MessageWrapper
+import types.WrappedMessage
+import types.product.AddStock
+import types.product.RetractStock
 import types.product.RetractStockResponse
+import types.product.SetPrice
 import java.lang.Integer.max
 import java.util.concurrent.CompletableFuture
 
@@ -23,76 +29,76 @@ class ProductFn : LoggedStatefulFunction() {
             .withSupplier(::ProductFn)
     }
 
-    override fun invoke(context: Context, message: Message): CompletableFuture<Void> {
-            if (message.`is`(ProductMessages.ADD_STOCK)) {
-                val addStockMessage = message.`as`(ProductMessages.ADD_STOCK)
+    override fun invoke(context: Context, requestId: String, message: WrappedMessage): CompletableFuture<Void> {
+        when(message) {
+            is AddStock -> handleAddStock(context, message)
+            is RetractStock -> handleRetractStock(context, requestId, message)
+            is SetPrice -> handleSetPrice(context, message)
+        }
 
-                logger.info { "Product ${context.self().id()} - Adding ${addStockMessage.amount} of stock"}
+        return context.done()
+    }
 
-                val storage = context.storage()
-                val product = storage.get(PRODUCT).orElse(Product(0, 0))
-                product.stock += addStockMessage.amount
+    private fun handleAddStock(context: Context, message: AddStock) {
+        logger.info { "Product ${context.self().id()} - Adding ${message.amount} of stock"}
 
-                storage.set(PRODUCT, product)
+        val storage = context.storage()
+        val product = storage.get(PRODUCT).orElse(Product(0, 0))
+        product.stock += message.amount
 
-                logger.info { "Product ${context.self().id()} - New amount of stock: ${product.stock}" }
+        storage.set(PRODUCT, product)
 
-                return context.done()
+        logger.info { "Product ${context.self().id()} - New amount of stock: ${product.stock}" }
+    }
+
+    private fun handleRetractStock(context: Context, requestId: String, message: RetractStock) {
+        logger.info { "Product ${context.self().id()} - Retracting ${message.amount} of stock" }
+
+        val storage = context.storage()
+        val product = storage.get(ProductFn.PRODUCT).orElse(Product(0, 0))
+        var success = false
+
+        if (product.stock - message.amount >= 0) {
+            product.stock -= message.amount
+            success = true
+        }
+
+        storage.set(ProductFn.PRODUCT, product)
+
+        logger.info { "Product ${context.self().id()} - New amount of stock: ${product.stock}" }
+
+        if (context.caller().isPresent) {
+            val caller = context.caller().get()
+            val responseMessage = MessageBuilder
+                .forAddress(caller.type(), caller.id())
+                .withCustomType(
+                    BenchmarkMessages.WRAPPER_MESSAGE,
+                    MessageWrapper(requestId, RetractStockResponse(
+                        success,
+                        message.amount,
+                        product.price
+                    ))
+                )
+                .build()
+            logger.info {
+                "Product ${
+                    context.self().id()
+                } - Sending ${if (success) "successful" else "failed"} response to caller ${
+                    caller.type().asTypeNameString()
+                }/${caller.id()}"
             }
+            context.send(responseMessage)
+        }
+    }
 
-            if (message.`is`(ProductMessages.RETRACT_STOCK)) {
-                val retractStockMessage = message.`as`(ProductMessages.RETRACT_STOCK)
+    private fun handleSetPrice(context: Context, message: SetPrice) {
+        val storage = context.storage()
+        val product = storage.get(PRODUCT).orElse(Product(0, 0))
+        product.price = message.price
+        storage.set(PRODUCT, product)
 
-                logger.info { "Product ${context.self().id()} - Retracting ${retractStockMessage.amount} of stock"}
+        logger.info { "Product ${context.self().id()} - Price set to: ${message.price}" }
 
-                val storage = context.storage()
-                val product = storage.get(PRODUCT).orElse(Product(0, 0))
-                var success = false
-
-                if (product.stock - retractStockMessage.amount >= 0) {
-                    product.stock -= retractStockMessage.amount
-                    success = true
-                }
-
-                storage.set(PRODUCT, product)
-
-                logger.info { "Product ${context.self().id()} - New amount of stock: ${product.stock}" }
-
-                if (context.caller().isPresent) {
-                    val caller = context.caller().get()
-                    val responseMessage = MessageBuilder
-                        .forAddress(caller.type(), caller.id())
-                        .withCustomType(
-                            ProductMessages.RETRACT_STOCK_RESPONSE,
-                            RetractStockResponse(
-                                success,
-                                retractStockMessage.amount,
-                                product.price,
-                                retractStockMessage.requestId
-                            )
-                        )
-                        .build()
-                    logger.info { "Product ${context.self().id()} - Sending ${if (success) "successful" else "failed"} response to caller ${caller.type().asTypeNameString()}/${caller.id()}" }
-                    context.send(responseMessage)
-                }
-
-                return context.done()
-            }
-
-            if (message.`is`(ProductMessages.SET_PRICE)) {
-                val setPriceMessage = message.`as`(ProductMessages.SET_PRICE)
-
-                val storage = context.storage()
-                val product = storage.get(PRODUCT).orElse(Product(0, 0))
-                product.price = setPriceMessage.price
-                storage.set(PRODUCT, product)
-
-                logger.info { "Product ${context.self().id()} - Price set to: ${setPriceMessage.price}" }
-
-                return context.done()
-            }
-
-            return context.done()
     }
 
 

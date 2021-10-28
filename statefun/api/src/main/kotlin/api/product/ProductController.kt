@@ -1,8 +1,13 @@
 package api.product
 
+import api.logging.LoggingFilter
 import api.logging.RequestInfo
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.web.bind.annotation.*
+import types.MessageWrapper
 import types.product.AddStock
 import types.product.SetPrice
 import java.util.*
@@ -10,6 +15,8 @@ import java.util.*
 @RestController()
 @RequestMapping("/products")
 class ProductController(val kafkaTemplate: KafkaTemplate<String, Any>, val requestInfo: RequestInfo) {
+
+    private val logger: Logger = LoggerFactory.getLogger(ProductController::class.java)
 
     @PostMapping()
     fun createProduct(@RequestBody product: Product?): String {
@@ -28,10 +35,10 @@ class ProductController(val kafkaTemplate: KafkaTemplate<String, Any>, val reque
 
     private fun handleProductChange(productId: String, product: Product?) {
         if (product?.price != null) {
-            kafkaTemplate.send("set-price", productId, SetPrice(product.price, requestInfo.requestId))
+            kafkaTemplate.send("set-price", productId, MessageWrapper(requestInfo.requestId, SetPrice(product.price)))
         }
         if (product?.stock != null) {
-            kafkaTemplate.send("add-stock", productId, AddStock(product.stock, requestInfo.requestId))
+            kafkaTemplate.send("add-stock", productId, MessageWrapper(requestInfo.requestId, AddStock(product.stock)))
         }
 
     }
