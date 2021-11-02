@@ -38,4 +38,8 @@ class ProductEntity(@EntityId private val entityId: String) {
         ctx.emit(Domain.PriceChanged.newBuilder().setPrice(price.price).build())
         return Empty.getDefaultInstance()
     }
+
+    @CommandHandler
+    fun getProduct(getProductMessage: Product.GetProductMessage, ctx: CommandContext): Product.ProductResponse =
+        Product.ProductResponse.newBuilder().setPrice(price).setStock(stock).build() 
 }
