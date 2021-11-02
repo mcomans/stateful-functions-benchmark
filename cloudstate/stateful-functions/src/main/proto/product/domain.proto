@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package product.persistence;
+
+message Product {
+  int32 price = 1;
+  int32 stock = 2;
+}
+
+message PriceChanged {
+  int32 price = 1;
+}
