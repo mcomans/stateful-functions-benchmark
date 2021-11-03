@@ -17,9 +17,7 @@ class ProductEntity(@EntityId private val entityId: String) {
     private var stock: Int = 0
 
     @Snapshot
-    fun snapshot(): Domain.Product {
-        return Domain.Product.newBuilder().setPrice(price).setStock(stock).build()
-    }
+    fun snapshot(): Domain.Product = Domain.Product.newBuilder().setPrice(price).setStock(stock).build()
 
     @SnapshotHandler
     fun snapshotHandler(product: Domain.Product) {
@@ -41,5 +39,5 @@ class ProductEntity(@EntityId private val entityId: String) {
 
     @CommandHandler
     fun getProduct(getProductMessage: Product.GetProductMessage, ctx: CommandContext): Product.ProductResponse =
-        Product.ProductResponse.newBuilder().setPrice(price).setStock(stock).build() 
+        Product.ProductResponse.newBuilder().setPrice(price).setStock(stock).build()
 }

@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package user;
+
+message AddCreditsMessage {
+  string user_id = 1;
+  int32 amount = 2;
+}
+
+message RetractCreditsMessage {
+  string user_id = 1;
+  int32 amount = 2;
+}
+
+service UserService {
+  rpc AddCredits(AddCreditsMessage) returns (google.protobuf.Empty);
+  rpc RetractCredits(RetractCreditsMessage) returns (google.protobuf.Empty);
+}

@@ -1,16 +1,17 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
+import "cloudstate/entity_key.proto";
 
 package product;
 
 message ProductPrice {
-  string product_id = 1;
+  string product_id = 1 [(.cloudstate.entity_key) = true];
   int32 price = 2;
 }
 
 message GetProductMessage {
-  string product_id = 1;
+  string product_id = 1 [(.cloudstate.entity_key) = true];
 }
 
 message ProductResponse {

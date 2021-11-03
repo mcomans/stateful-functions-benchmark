@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package user.persistence;
+
+message User {
+  int32 credits = 1;
+}
+
+message CreditsChanged {
+  int32 credits = 1;
+}
