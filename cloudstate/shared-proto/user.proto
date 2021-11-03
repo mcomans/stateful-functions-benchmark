@@ -1,16 +1,17 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
+import "cloudstate/entity_key.proto";
 
 package user;
 
 message AddCreditsMessage {
-  string user_id = 1;
+  string user_id = 1 [(.cloudstate.entity_key) = true];
   int32 amount = 2;
 }
 
 message RetractCreditsMessage {
-  string user_id = 1;
+  string user_id = 1 [(.cloudstate.entity_key) = true];
   int32 amount = 2;
 }
 
