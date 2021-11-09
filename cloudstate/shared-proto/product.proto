@@ -19,7 +19,18 @@ message ProductResponse {
   int32 stock = 2;
 }
 
+message RetractStockMessage {
+  string product_id = 1 [(.cloudstate.entity_key) = true];
+  int32 amount = 2;
+}
+
+message RetractStockResponse {
+  bool success = 1;
+  int32 price = 2;
+}
+
 service ProductService {
   rpc SetPrice(ProductPrice) returns (google.protobuf.Empty);
   rpc GetProduct(GetProductMessage) returns (ProductResponse);
+  rpc RetractStock(RetractStockMessage) returns (RetractStockResponse);
 }

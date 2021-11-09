@@ -10,3 +10,7 @@ message Product {
 message PriceChanged {
   int32 price = 1;
 }
+
+message StockChanged {
+  int32 stock = 1;
+}

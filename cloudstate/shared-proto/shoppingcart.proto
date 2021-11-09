@@ -11,6 +11,20 @@ message AddToCartMessage {
   int32 amount = 3;
 }
 
+message GetCartContentsMessage {
+  string cart_id = 1 [(.cloudstate.entity_key) = true];
+}
+
+message CartProduct {
+  string product_id = 1;
+  int32 amount = 2;
+}
+
+message GetCartContentsResponse {
+  repeated CartProduct products = 1;
+}
+
 service ShoppingCartService {
   rpc AddToCart(AddToCartMessage) returns (google.protobuf.Empty);
+  rpc GetCartContents(GetCartContentsMessage) returns (GetCartContentsResponse);
 }

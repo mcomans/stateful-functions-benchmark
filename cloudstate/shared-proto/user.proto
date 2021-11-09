@@ -15,7 +15,11 @@ message RetractCreditsMessage {
   int32 amount = 2;
 }
 
+message RetractCreditsResponse {
+  bool success = 1;
+}
+
 service UserService {
   rpc AddCredits(AddCreditsMessage) returns (google.protobuf.Empty);
-  rpc RetractCredits(RetractCreditsMessage) returns (google.protobuf.Empty);
+  rpc RetractCredits(RetractCreditsMessage) returns (RetractCreditsResponse);
 }

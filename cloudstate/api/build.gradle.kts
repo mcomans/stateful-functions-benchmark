@@ -2,27 +2,33 @@ import com.google.protobuf.gradle.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.5.0"
+    id("org.springframework.boot") version "2.5.5"
+    id("io.spring.dependency-management") version "1.0.11.RELEASE"
+    kotlin("jvm") version "1.5.31"
+    kotlin("plugin.spring") version "1.5.31"
     id("com.google.protobuf") version "0.8.12"
-    id("com.google.cloud.tools.jib") version "3.1.4"
     idea
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
-}
-
 group = "nl.tudelft"
-version = "1.0-SNAPSHOT"
+version = "0.0.1-SNAPSHOT"
+java.sourceCompatibility = JavaVersion.VERSION_11
+java.targetCompatibility = JavaVersion.VERSION_11
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
+    implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("net.logstash.logback:logstash-logback-encoder:6.6")
+
     implementation(kotlin("stdlib-jdk8"))
     implementation("io.cloudstate:cloudstate-kotlin-support:0.5.2")
+    implementation("net.devh:grpc-client-spring-boot-starter:2.12.0.RELEASE")
     implementation("com.google.api.grpc:proto-google-common-protos:2.6.0")
     implementation("io.grpc:grpc-netty-shaded:1.41.0")
     implementation("io.grpc:grpc-protobuf:1.41.0")
@@ -47,37 +53,15 @@ protobuf {
             it.plugins {
                 id("grpc")
             }
-//            it.builtins {
-//                id("kotlin")
-//            }
         }
     }
 }
 
-jib {
-    from {
-        image = "eclipse-temurin:11-jdk-focal"
-        platforms {
-//            platform {
-//                architecture = "amd64"
-//                os = "linux"
-//            }
-            platform {
-                architecture = "arm64"
-                os = "linux"
-            }
-        }
-    }
-    to {
-        image = "benchmark-cloudstate"
-        tags = setOf(project.version.toString())
-    }
-    container {
-        mainClass = "ApplicationKt"
-        ports = listOf("8080")
-    }
-}
 
-tasks.withType<KotlinCompile>() {
-    kotlinOptions.jvmTarget = "11"
+
+tasks.withType<KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs = listOf("-Xjsr305=strict")
+        jvmTarget = "11"
+    }
 }
