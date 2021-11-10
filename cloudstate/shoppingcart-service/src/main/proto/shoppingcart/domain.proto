@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package shoppingcart.persistence;
+
+message ShoppingCartProduct {
+  string product_id = 1;
+  int32 amount = 2;
+}
+
+message ShoppingCart {
+  repeated ShoppingCartProduct products = 1;
+}
+
+message ProductAdded {
+  string product_id = 1;
+  int32 amount = 2;
+}
+
+message ProductRemoved {
+  string product_id = 1;
+  int32 amount = 2;
+}

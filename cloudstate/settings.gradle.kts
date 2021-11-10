@@ -1,3 +1,3 @@
 rootProject.name = "cloudstate"
 
-include("stateful-functions", "api")
+include("user-service", "order-service", "shoppingcart-service", "product-service", "api")
