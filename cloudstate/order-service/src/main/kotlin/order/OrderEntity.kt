@@ -18,15 +18,15 @@ class OrderEntity(@EntityId private val entityId: String) {
     private val status = "CREATED"
 
     private val asyncCartStub = ShoppingCartServiceGrpc.newFutureStub(
-        ManagedChannelBuilder.forAddress("shopping-cart", 8080).usePlaintext().build()
+        ManagedChannelBuilder.forAddress("shoppingcart-service", 80).usePlaintext().build()
     )
 
     private val asyncProductStub = ProductServiceGrpc.newFutureStub(
-        ManagedChannelBuilder.forAddress("user", 8080).usePlaintext().build()
+        ManagedChannelBuilder.forAddress("product-service", 80).usePlaintext().build()
     )
 
     private val asyncUserStub = UserServiceGrpc.newFutureStub(
-        ManagedChannelBuilder.forAddress("user", 8080).usePlaintext().build()
+        ManagedChannelBuilder.forAddress("user-service", 80).usePlaintext().build()
     )
 
     @CommandHandler

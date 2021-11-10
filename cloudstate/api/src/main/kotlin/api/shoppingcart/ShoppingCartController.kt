@@ -11,7 +11,7 @@ import java.util.*
 @RequestMapping("/shopping-carts")
 class ShoppingCartController(val requestInfo: RequestInfo) {
 
-    @GrpcClient("shopping-cart")
+    @GrpcClient("shoppingcart-service")
     private lateinit var shoppingCartStub: ShoppingCartServiceGrpc.ShoppingCartServiceBlockingStub;
 
     @PostMapping()

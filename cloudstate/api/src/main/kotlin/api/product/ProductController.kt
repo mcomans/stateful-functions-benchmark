@@ -13,7 +13,7 @@ import java.util.*
 @RequestMapping("/products")
 class ProductController(val requestInfo: RequestInfo) {
 
-    @GrpcClient("product")
+    @GrpcClient("product-service")
     private lateinit var productStub: ProductServiceGrpc.ProductServiceBlockingStub;
 
     private val logger: Logger = LoggerFactory.getLogger(ProductController::class.java)

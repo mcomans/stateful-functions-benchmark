@@ -14,7 +14,7 @@ import java.util.*
 @RequestMapping
 class OrderController(val requestInfo: RequestInfo) {
 
-    @GrpcClient("order")
+    @GrpcClient("order-service")
     private lateinit var orderStub: OrderServiceGrpc.OrderServiceBlockingStub;
 
     @PostMapping("/checkout")

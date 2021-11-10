@@ -10,7 +10,7 @@ import java.util.*
 @RequestMapping("/users")
 class UserController(val requestInfo: RequestInfo) {
 
-    @GrpcClient("user")
+    @GrpcClient("user-service")
     private lateinit var userStub: UserServiceGrpc.UserServiceBlockingStub;
 
     @PostMapping("")
