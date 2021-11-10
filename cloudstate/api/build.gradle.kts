@@ -7,6 +7,7 @@ plugins {
     kotlin("jvm") version "1.5.31"
     kotlin("plugin.spring") version "1.5.31"
     id("com.google.protobuf") version "0.8.12"
+    id("com.google.cloud.tools.jib") version "3.1.4"
     idea
 }
 
@@ -57,6 +58,27 @@ protobuf {
     }
 }
 
+jib {
+    from {
+        image = "eclipse-temurin:11-jdk-focal"
+        platforms {
+//            platform {
+//                architecture = "amd64"
+//                os = "linux"
+//            }
+            platform {
+                architecture = "arm64"
+                os = "linux"
+            }
+        }
+    }
+    to {
+        image = "benchmark-cloudstate-api"
+    }
+    container {
+        ports = listOf("8080")
+    }
+}
 
 
 tasks.withType<KotlinCompile> {
