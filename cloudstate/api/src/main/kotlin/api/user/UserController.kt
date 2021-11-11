@@ -14,7 +14,7 @@ class UserController(val requestInfo: RequestInfo) {
     private lateinit var userStub: UserServiceGrpc.UserServiceBlockingStub;
 
     @PostMapping("")
-    fun createUser(@RequestBody userBody: User?): String {
+    fun createUser(@RequestBody userBody: UserBody?): String {
         val userId = UUID.randomUUID().toString()
 
         if (userBody?.credits != null) {
@@ -27,13 +27,13 @@ class UserController(val requestInfo: RequestInfo) {
     }
 
     @PatchMapping("/{userId}/credits/add")
-    fun addCredit(@PathVariable userId: String, @RequestBody userBody: User) {
-        if (userBody.credits != null) {
+    fun addCredit(@PathVariable userId: String, @RequestBody userBody: UserBody?) {
+        if (userBody?.credits != null) {
             userStub.addCredits(
                 user.User.AddCreditsMessage.newBuilder().setUserId(userId).setAmount(userBody.credits).build()
             )
         }
     }
 
-    data class User(val credits: Int?)
+    data class UserBody(val credits: Int?)
 }

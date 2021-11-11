@@ -47,14 +47,14 @@ class ShoppingCartEntity(@EntityId private val entityId: String) {
    @CommandHandler
    fun addToCart(addToCartMessage: Shoppingcart.AddToCartMessage, ctx: CommandContext): Empty {
       println("Cart $entityId - Adding product ${addToCartMessage.productId} with amount ${addToCartMessage.amount}")
-      ctx.emit(Domain.ProductAdded.newBuilder().setProductId(addToCartMessage.productId).setAmount(addToCartMessage.amount))
+      ctx.emit(Domain.ProductAdded.newBuilder().setProductId(addToCartMessage.productId).setAmount(addToCartMessage.amount).build())
       return Empty.getDefaultInstance()
    }
 
    @CommandHandler
    fun removeFromCart(removeFromCartMessage: Shoppingcart.RemoveFromCartMessage, ctx: CommandContext): Empty {
       println("Cart $entityId - Removing product ${removeFromCartMessage.productId} with amount ${removeFromCartMessage.amount}")
-      ctx.emit(Domain.ProductRemoved.newBuilder().setProductId(removeFromCartMessage.productId).setAmount(removeFromCartMessage.amount))
+      ctx.emit(Domain.ProductRemoved.newBuilder().setProductId(removeFromCartMessage.productId).setAmount(removeFromCartMessage.amount).build())
       return Empty.getDefaultInstance()
    }
 

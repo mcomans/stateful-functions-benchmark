@@ -1,6 +1,7 @@
 package api.shoppingcart
 
 import api.logging.RequestInfo
+import com.google.protobuf.Empty
 import net.devh.boot.grpc.client.inject.GrpcClient
 import org.springframework.web.bind.annotation.*
 import shoppingcart.ShoppingCartServiceGrpc
@@ -19,7 +20,7 @@ class ShoppingCartController(val requestInfo: RequestInfo) {
         return UUID.randomUUID().toString()
     }
 
-    @PostMapping("/{cartId}")
+    @PostMapping("/{cartId}/products")
     fun addToCart(@PathVariable cartId: String, @RequestBody product: ShoppingCartProduct) {
         shoppingCartStub.addToCart(
             Shoppingcart.AddToCartMessage.newBuilder()
