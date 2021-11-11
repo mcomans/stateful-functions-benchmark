@@ -38,7 +38,7 @@ class ProductController(val requestInfo: RequestInfo) {
             productStub.setPrice(product.Product.ProductPrice.newBuilder().setProductId(productId).setPrice(productBody.price).build())
         }
         if (productBody?.stock != null) {
-            // TODO
+            productStub.addStock(product.Product.AddStockMessage.newBuilder().setProductId(productId).setAmount(productBody.stock).build())
         }
 
     }

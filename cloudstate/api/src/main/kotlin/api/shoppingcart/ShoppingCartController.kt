@@ -32,7 +32,13 @@ class ShoppingCartController(val requestInfo: RequestInfo) {
 
     @DeleteMapping("/{cartId}/products")
     fun removeFromCart(@PathVariable cartId: String, @RequestBody product: ShoppingCartProduct) {
-        // TODO
+        shoppingCartStub.removeFromCart(
+            Shoppingcart.RemoveFromCartMessage.newBuilder()
+                .setCartId(cartId)
+                .setProductId(product.productId)
+                .setAmount(product.amount)
+                .build()
+        )
     }
 
     data class ShoppingCartProduct(val productId: String, val amount: Int)

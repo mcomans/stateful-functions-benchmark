@@ -26,6 +26,7 @@ class UserEntity(@EntityId private val entityId: String) {
     @CommandHandler
     fun retractCredits(retractCreditsMessage: User.RetractCreditsMessage, ctx: CommandContext): Empty {
         val newCredits = credits - retractCreditsMessage.amount;
+        println("User $entityId - Retracting ${retractCreditsMessage.amount} credits. New credits: $newCredits")
         ctx.emit(Domain.CreditsChanged.newBuilder().setCredits(newCredits).build())
         return Empty.getDefaultInstance()
     }
@@ -33,6 +34,7 @@ class UserEntity(@EntityId private val entityId: String) {
     @CommandHandler
     fun addCredits(addCreditsMessage: User.AddCreditsMessage, ctx: CommandContext): Empty {
         val newCredits = credits + addCreditsMessage.amount;
+        println("User $entityId - Adding ${addCreditsMessage.amount} credits. New credits: $newCredits")
         ctx.emit(Domain.CreditsChanged.newBuilder().setCredits(newCredits).build())
         return Empty.getDefaultInstance()
     }

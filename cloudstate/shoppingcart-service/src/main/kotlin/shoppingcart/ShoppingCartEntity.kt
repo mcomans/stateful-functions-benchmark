@@ -28,6 +28,7 @@ class ShoppingCartEntity(@EntityId private val entityId: String) {
       val amountInCart = cart[productAdded.productId]?.amount ?: 0
       val newAmount = amountInCart + productAdded.amount
       cart[productAdded.productId] = ShoppingCartProduct(productAdded.productId, newAmount)
+      println("Cart $entityId - Cart contents: $cart")
    }
 
    @EventHandler
@@ -40,11 +41,20 @@ class ShoppingCartEntity(@EntityId private val entityId: String) {
       } else {
          cart[productRemoved.productId] = ShoppingCartProduct(productRemoved.productId, newAmount)
       }
+      println("Cart $entityId - Cart contents: $cart")
    }
 
    @CommandHandler
    fun addToCart(addToCartMessage: Shoppingcart.AddToCartMessage, ctx: CommandContext): Empty {
+      println("Cart $entityId - Adding product ${addToCartMessage.productId} with amount ${addToCartMessage.amount}")
       ctx.emit(Domain.ProductAdded.newBuilder().setProductId(addToCartMessage.productId).setAmount(addToCartMessage.amount))
+      return Empty.getDefaultInstance()
+   }
+
+   @CommandHandler
+   fun removeFromCart(removeFromCartMessage: Shoppingcart.RemoveFromCartMessage, ctx: CommandContext): Empty {
+      println("Cart $entityId - Removing product ${removeFromCartMessage.productId} with amount ${removeFromCartMessage.amount}")
+      ctx.emit(Domain.ProductRemoved.newBuilder().setProductId(removeFromCartMessage.productId).setAmount(removeFromCartMessage.amount))
       return Empty.getDefaultInstance()
    }
 

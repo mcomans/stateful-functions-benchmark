@@ -31,6 +31,7 @@ class OrderEntity(@EntityId private val entityId: String) {
 
     @CommandHandler
     fun checkout(checkoutMessage: Order.CheckoutMessage): Empty {
+        println("Checkout started")
         val contents = asyncCartStub.getCartContents(
             Shoppingcart.GetCartContentsMessage.newBuilder().setCartId(checkoutMessage.cartId).build()
         ).get();
@@ -43,7 +44,7 @@ class OrderEntity(@EntityId private val entityId: String) {
 
         if (retractStockResponses.any { !it.success }) {
             // Rollback
-            print("rollback")
+            println("rollback")
 
             return Empty.getDefaultInstance()
         }

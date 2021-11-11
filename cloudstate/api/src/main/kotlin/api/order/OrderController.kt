@@ -18,7 +18,7 @@ class OrderController(val requestInfo: RequestInfo) {
     private lateinit var orderStub: OrderServiceGrpc.OrderServiceBlockingStub;
 
     @PostMapping("/checkout")
-    fun checkout(@RequestBody orderCheckout: OrderCheckout) {
+    fun checkout(@RequestBody orderCheckout: OrderCheckout): String {
         val orderId = UUID.randomUUID().toString()
 
         orderStub.checkout(
@@ -28,6 +28,8 @@ class OrderController(val requestInfo: RequestInfo) {
                 .setCartId(orderCheckout.cartId)
                 .build()
         )
+
+        return orderId;
     }
 
     data class OrderCheckout(val cartId: String, val userId: String)

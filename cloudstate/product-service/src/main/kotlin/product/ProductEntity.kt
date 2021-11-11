@@ -37,6 +37,7 @@ class ProductEntity(@EntityId private val entityId: String) {
 
     @CommandHandler
     fun setPrice(price: Product.ProductPrice, ctx: CommandContext): Empty {
+        println("Product $entityId - new price: ${price.price}")
         ctx.emit(Domain.PriceChanged.newBuilder().setPrice(price.price).build())
         return Empty.getDefaultInstance()
     }
@@ -46,8 +47,17 @@ class ProductEntity(@EntityId private val entityId: String) {
         Product.ProductResponse.newBuilder().setPrice(price).setStock(stock).build()
 
     @CommandHandler
+    fun addStock(addStockMessage: Product.AddStockMessage, ctx: CommandContext): Empty {
+        val newStock = stock + addStockMessage.amount;
+        println("Product $entityId - Adding ${addStockMessage.amount} of stock. New stock: $newStock")
+        ctx.emit(Domain.StockChanged.newBuilder().setStock(newStock).build())
+        return Empty.getDefaultInstance()
+    }
+
+    @CommandHandler
     fun retractStock(retractStockMessage: Product.RetractStockMessage, ctx: CommandContext): Product.RetractStockResponse {
         val newStock = stock - retractStockMessage.amount;
+        println("Product $entityId - Retracting ${retractStockMessage.amount} of stock. New stock: $newStock")
         if (newStock >= 0) {
             ctx.emit(Domain.StockChanged.newBuilder().setStock(newStock).build())
             return Product.RetractStockResponse.newBuilder().setPrice(price).setSuccess(true).build();
