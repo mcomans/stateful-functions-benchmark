@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.util.*
 
 @RestController
-@RequestMapping
+@RequestMapping("/orders")
 class OrderController(val requestInfo: RequestInfo) {
 
     @GrpcClient("order-service")

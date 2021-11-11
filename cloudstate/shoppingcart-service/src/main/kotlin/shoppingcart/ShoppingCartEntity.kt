@@ -45,6 +45,13 @@ class ShoppingCartEntity(@EntityId private val entityId: String) {
    }
 
    @CommandHandler
+   fun getCartContents(getCartContentsMessage: Shoppingcart.GetCartContentsMessage): Shoppingcart.GetCartContentsResponse {
+      return Shoppingcart.GetCartContentsResponse.newBuilder().addAllProducts(
+         cart.map { Shoppingcart.CartProduct.newBuilder().setProductId(it.key).setAmount(it.value.amount).build() }
+      ).build()
+   }
+
+   @CommandHandler
    fun addToCart(addToCartMessage: Shoppingcart.AddToCartMessage, ctx: CommandContext): Empty {
       println("Cart $entityId - Adding product ${addToCartMessage.productId} with amount ${addToCartMessage.amount}")
       ctx.emit(Domain.ProductAdded.newBuilder().setProductId(addToCartMessage.productId).setAmount(addToCartMessage.amount).build())
