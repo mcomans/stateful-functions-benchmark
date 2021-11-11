@@ -4,8 +4,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.protobuf.Empty
 import io.cloudstate.javasupport.eventsourced.CommandContext
 import io.cloudstate.kotlinsupport.annotations.EntityId
-import io.cloudstate.kotlinsupport.annotations.eventsourced.CommandHandler
-import io.cloudstate.kotlinsupport.annotations.eventsourced.EventSourcedEntity
+import io.cloudstate.kotlinsupport.annotations.eventsourced.*
 import io.grpc.ManagedChannelBuilder
 import order.persistence.Domain
 import product.Product
@@ -17,7 +16,7 @@ import user.UserServiceGrpc
 
 @EventSourcedEntity
 class OrderEntity(@EntityId private val entityId: String) {
-    private val status = "CREATED"
+    private var status = "CREATED"
 
     private val asyncCartStub = ShoppingCartServiceGrpc.newFutureStub(
         ManagedChannelBuilder.forAddress("shoppingcart-service", 80).usePlaintext().build()
@@ -30,6 +29,19 @@ class OrderEntity(@EntityId private val entityId: String) {
     private val asyncUserStub = UserServiceGrpc.newFutureStub(
         ManagedChannelBuilder.forAddress("user-service", 80).usePlaintext().build()
     )
+
+    @Snapshot
+    fun snapshot(): Domain.Order = Domain.Order.newBuilder().setStatus(status).build()
+
+    @SnapshotHandler
+    fun snapshotHandler(order: Domain.Order) {
+        status = order.status
+    }
+
+    @EventHandler
+    fun statusChanged(statusChanged: Domain.StatusChanged) {
+        status = statusChanged.status
+    }
 
     @CommandHandler
     fun checkout(checkoutMessage: Order.CheckoutMessage, ctx: CommandContext): Empty {
