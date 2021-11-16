@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd
+  namespace: kube-system
+  labels:
+    k8s-app: fluentd-logging
+    version: v1
+spec:
+  selector:
+    matchLabels:
+      k8s-app: fluentd-logging
+      version: v1
+  template:
+    metadata:
+      labels:
+        k8s-app: fluentd-logging
+        version: v1
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: fluentd
+        image: fluent/fluentd-kubernetes-daemonset:v1.14.2-debian-kafka2-1.1
+        env:
+          - name: FLUENT_KAFKA2_BROKERS
+            value: kafka-0.kafka-headless.default.svc.cluster.local:9092
+          - name: FLUENT_KAFKA2_DEFAULT_TOPIC
+            value: cluster-logs
+          - name: FLUENT_UID
+            value: '0'
+          - name: FLUENTD_SYSTEMD_CONF
+            value: 'disable'
+          - name: FLUENT_KAFKA2_COMPRESSION_CODEC
+            value: "gzip"
+          - name: FLUENT_KAFKA2_MAX_SEND_LIMIT_BYTES
+            value: "1000000"
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        # When actual pod logs in /var/lib/docker/containers, the following lines should be used.
+        - name: dockercontainerlogdirectory
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        # When actual pod logs in /var/log/pods, the following lines should be used.
+        # - name: dockercontainerlogdirectory
+        #   mountPath: /var/log/pods
+        #   readOnly: true
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      # When actual pod logs in /var/lib/docker/containers, the following lines should be used.
+      - name: dockercontainerlogdirectory
+        hostPath:
+          path: /var/lib/docker/containers
+      # When actual pod logs in /var/log/pods, the following lines should be used.
+      # - name: dockercontainerlogdirectory
+      #   hostPath:
+      #     path: /var/log/pods
+      - name: fluent-config
+        configMap:
+          name: fluent
+          items:
+            - key: fluent_conf
+              path: fluent.conf
