@@ -31,7 +31,17 @@ def register_carts_functions(cloud):
     cart = cb.get(cart_id)
 
     return cart
-  
+
+  def checkout_get_cart_contents(cb, checkout):
+    cart_id = checkout["cart_id"]
+    cart = cb.get(cart_id)
+
+    return {
+      "cart": cart,
+      "user_id": checkout["user_id"]
+    }
+
   cloud.register(add_product_to_cart, "add_product_to_cart")
   cloud.register(remove_product_from_cart, "remove_product_from_cart")
   cloud.register(get_cart_contents, "get_cart_contents")
+  cloud.register(checkout_get_cart_contents, "checkout_get_cart_contents")
