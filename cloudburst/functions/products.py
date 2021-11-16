@@ -51,7 +51,8 @@ def register_products_functions(cloud):
   def checkout_retract_all_stock(cb, cart_result):
     print("Checkout - Retracting all stock")
     cart = cart_result["cart"]
-    results = [checkout_retract_stock(cb, product_id, amount) for product_id, amount in cart.values()]
+    print(cart)
+    results = [checkout_retract_stock(cb, product_id, amount) for product_id, amount in cart.items()]
 
     failures = [not r["success"] for r in results]
 
@@ -78,7 +79,7 @@ def register_products_functions(cloud):
 
     print("Checkout - Rollback stock, not enough credit")
     cart = retract_credit_result["cart"]
-    _ = [add_product_stock(cb, product_id, amount) for product_id, amount in cart.values()]
+    _ = [add_product_stock(cb, product_id, amount) for product_id, amount in cart.items()]
 
     return
 

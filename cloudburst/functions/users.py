@@ -34,7 +34,7 @@ def register_users_functions(cloud):
     if user is None:
       return None
 
-    new_credits = user["credits"] - int(credits)
+    new_credits = user["credits"] - int(retract_stock_result["total_price"])
 
     if new_credits < 0:
       print("Checkout - Not enough credits")

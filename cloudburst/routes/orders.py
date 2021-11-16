@@ -11,5 +11,7 @@ retract_user_credits = cloud.get_function("retract_user_credits")
 def checkout_order():
   checkout = request.json
   cloud.call_dag("checkout", {
-    "checkout_get_cart_contents": {"user_id": checkout}
+      "checkout_get_cart_contents": {"user_id": checkout["userId"], "cart_id": checkout["cartId"]}
   })
+
+  return "success?"
