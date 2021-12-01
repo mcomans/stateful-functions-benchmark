@@ -23,9 +23,9 @@ abstract class LoggedStatefulFunction : StatefulFunction {
                 "caller_id" to (context.caller().orElse(null)?.id() ?: "none"),
                 "message_type" to wrapper.message.javaClass.name
             ) {
-                logger.info { "INCOMING_CALL" }
+                logger.trace { "INCOMING_CALL" }
                 val result = invoke(context, wrapper.requestId, wrapper.message)
-                logger.info { "DONE" }
+                logger.trace { "DONE" }
                 return result;
             }
         }

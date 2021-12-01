@@ -16,7 +16,7 @@ class ShoppingCartController(val kafkaTemplate: KafkaTemplate<String, Any>, val 
         return UUID.randomUUID().toString()
     }
 
-    @PostMapping("/{cartId}")
+    @PostMapping("/{cartId}/products")
     fun addToCart(@PathVariable cartId: String, @RequestBody product: ShoppingCartProduct) {
         kafkaTemplate.send("add-to-cart", cartId, MessageWrapper(requestInfo.requestId, AddToCart(product.productId, product.amount)))
     }

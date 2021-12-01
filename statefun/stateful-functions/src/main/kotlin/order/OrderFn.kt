@@ -14,6 +14,7 @@ import types.order.Checkout
 import types.product.AddStock
 import types.product.RetractStock
 import types.product.RetractStockResponse
+import types.product.UpdateFrequentlyBoughtTogether
 import types.shoppingcart.GetCart
 import types.shoppingcart.GetCartResponse
 import types.user.RetractCredit
@@ -140,7 +141,12 @@ class OrderFn : LoggedStatefulFunction() {
 
         if (message.success) {
             logger.info { "Order ${context.self().id()} - Checkout completed" }
+
             order.status = "COMPLETED"
+            // Send analytics after
+            order.products.forEach { (productId, _) ->
+                sendItemsBoughtTogether(productId, order.products.mapNotNull { (p, _) -> p.takeIf{p != productId} }, context, requestId)
+            }
         } else {
             logger.info { "Order ${context.self().id()} - Credit insufficient, rolling back stock changes" }
             order.products.forEach { entry -> rollbackStock(entry, context, requestId) }
@@ -158,6 +164,18 @@ class OrderFn : LoggedStatefulFunction() {
 
         logger.info { "Order ${context.self().id()} - Sending add stock message to ${entry.key}" }
         context.send(addStockMessage)
+    }
+
+    private fun sendItemsBoughtTogether(productId: String, boughtTogether: List<String>, context: Context, requestId: String) {
+        val updateFrequentlyBoughtTogether = MessageBuilder
+            .forAddress(ProductFn.TYPE, productId)
+            .withCustomType(BenchmarkMessages.WRAPPER_MESSAGE, MessageWrapper(requestId, UpdateFrequentlyBoughtTogether(
+                boughtTogether
+            )))
+            .build()
+
+        logger.info { "Order ${context.self().id()} - Sending update frequently bought items message to ${productId}" }
+        context.send(updateFrequentlyBoughtTogether)
     }
 
     class Order(val userId: String, var status: String, val products: MutableMap<String, OrderProduct>) {

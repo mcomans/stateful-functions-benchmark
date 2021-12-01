@@ -84,3 +84,15 @@ module:
                 valueType: benchmark/MessageWrapper
                 targets:
                   - benchmark/order
+      - ingress:
+          meta:
+            type: io.statefun.kafka/ingress
+            id: benchmark/get-freq-items-query
+          spec:
+            address: kafka:9092
+            consumerGroupId: benchmark
+            topics:
+              - topic: freq-items-query
+                valueType: benchmark/MessageWrapper
+                targets:
+                  - benchmark/product

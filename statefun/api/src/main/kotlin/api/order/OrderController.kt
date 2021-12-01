@@ -11,7 +11,7 @@ import types.order.Checkout
 import java.util.*
 
 @RestController
-@RequestMapping
+@RequestMapping("/orders")
 class OrderController(val kafkaTemplate: KafkaTemplate<String, Any>, val requestInfo: RequestInfo) {
 
     @PostMapping("/checkout")
