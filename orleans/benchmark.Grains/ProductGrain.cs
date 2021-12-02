@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using benchmark.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -43,11 +44,30 @@ namespace benchmark.Grains
             var price = _productState.State.Price;
             return Task.FromResult(price);
         }
+
+        public async Task UpdateFrequentItems(List<IProductGrain> products)
+        {
+            foreach (var product in products)
+            {   
+                if (_productState.State.FrequentItems.ContainsKey(product))
+                {
+                    _productState.State.FrequentItems[product] += 1;
+                }
+                else
+                {
+                    _productState.State.FrequentItems[product] = 1;
+                }
+            }
+
+            await _productState.WriteStateAsync();
+        }
     }
 
     public class ProductState
     {
         public int Price { get; set; } = 0;
         public int Stock { get; set; } = 0;
+
+        public Dictionary<IProductGrain, int> FrequentItems { get; } = new Dictionary<IProductGrain, int>();
     }
 }

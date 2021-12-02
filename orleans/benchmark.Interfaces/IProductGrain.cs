@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Orleans;
 
@@ -16,5 +17,7 @@ namespace benchmark.Interfaces
         
         Task SetPrice(int price);
         Task<int> GetPrice();
+
+        Task UpdateFrequentItems(List<IProductGrain> products);
     }
 }
