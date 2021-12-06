@@ -23,6 +23,7 @@ namespace benchmark.API
             {
                 // Add filter that adds random trace id to orleans request context
                 options.Filters.Add<TracingActionFilter>();
+                options.AllowEmptyInputInBodyModelBinding = true;
             });
         }
 

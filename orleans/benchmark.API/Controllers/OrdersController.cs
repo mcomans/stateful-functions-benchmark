@@ -25,7 +25,7 @@ namespace benchmark.API.Controllers
         {
             var id =  Guid.NewGuid();
             var grain = _client.GetGrain<IOrderGrain>(id);
-            var shoppingCart = _client.GetGrain<IShoppingCartGrain>(order.ShoppingCartId);
+            var shoppingCart = _client.GetGrain<IShoppingCartGrain>(order.CartId);
             var user = _client.GetGrain<IUserGrain>(order.UserId);
 
             var success = await grain.Checkout(shoppingCart, user);
@@ -36,7 +36,7 @@ namespace benchmark.API.Controllers
 
     public class Order
     {
-        public Guid ShoppingCartId { get; set; }
+        public Guid CartId { get; set; }
         public Guid UserId { get; set; }
     }
 }

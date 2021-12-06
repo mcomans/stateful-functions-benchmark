@@ -21,7 +21,7 @@ namespace benchmark.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Guid>> CreateUser([FromBody] User user)
+        public async Task<ActionResult<string>> CreateUser([FromBody] User user)
         {
             var id = Guid.NewGuid();
 
@@ -32,7 +32,7 @@ namespace benchmark.API.Controllers
                 await grain.AddCredit(user.Credits);
             }
 
-            return id;
+            return id.ToString();
         }
 
         [HttpPatch("{id:guid}/credits/add")]

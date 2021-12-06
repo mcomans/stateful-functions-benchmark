@@ -19,5 +19,7 @@ namespace benchmark.Interfaces
         Task<int> GetPrice();
 
         Task UpdateFrequentItems(List<IProductGrain> products);
+
+        Task<ISet<IProductGrain>> GetFrequentItemsGraph(ISet<IProductGrain> visited, int depth = 3, int top = 3);
     }
 }

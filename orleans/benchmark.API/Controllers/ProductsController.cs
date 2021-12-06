@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using benchmark.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +23,7 @@ namespace benchmark.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Guid>> AddProduct(Product product)
+        public async Task<ActionResult<string>> AddProduct([FromBody] Product product)
         {
             var id =  Guid.NewGuid();
             var productGrain = _client.GetGrain<IProductGrain>(id);
@@ -35,7 +37,7 @@ namespace benchmark.API.Controllers
                 await productGrain.IncreaseStock(product.Stock.Value);
             }
 
-            return id;
+            return id.ToString();
         }
 
         [HttpPatch("{id:guid}")]
@@ -60,6 +62,15 @@ namespace benchmark.API.Controllers
         {
             var price = await _client.GetGrain<IProductGrain>(id).GetPrice();
             return price;
+        }
+
+        [HttpGet("{id:guid}/freq-items")]
+        public async Task<ActionResult<List<string>>> GetFrequentItemsGraph(Guid id)
+        {
+            var products = await _client.GetGrain<IProductGrain>(id)
+                .GetFrequentItemsGraph(new HashSet<IProductGrain>());
+
+            return products.Select(p => p.GetPrimaryKey().ToString()).ToList();
         }
 
     }

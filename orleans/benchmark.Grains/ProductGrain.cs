@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using benchmark.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -60,6 +62,25 @@ namespace benchmark.Grains
             }
 
             await _productState.WriteStateAsync();
+        }
+        
+        public async Task<ISet<IProductGrain>> GetFrequentItemsGraph(ISet<IProductGrain> visited, int depth = 3, int top = 3)
+        {
+            var topProducts = _productState.State.FrequentItems.OrderBy(p => p.Value).Take(top).Select(p => p.Key).ToList();
+
+            if (depth == 1)
+            {
+                return topProducts.ToHashSet();
+            }
+
+            var newVisited = visited.Union(topProducts).ToHashSet();
+
+            var tasks = topProducts.Select(p =>
+                p.GetFrequentItemsGraph(newVisited, depth - 1, top));
+
+            var results = await Task.WhenAll(tasks);
+
+            return results.SelectMany(r => r).Union(topProducts).ToHashSet();
         }
     }
 

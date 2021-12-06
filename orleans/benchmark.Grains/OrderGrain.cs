@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using benchmark.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -41,8 +44,19 @@ namespace benchmark.Grains
                     }));
                 return false;
             }
-            await Task.WhenAll(products.Select(product => product.Key.DecreaseStock(product.Value)));
+            
+            await UpdateFrequentItems(products.Select(p => p.Key));
+            
             return true;
+        }
+
+        private static async Task UpdateFrequentItems(IEnumerable<IProductGrain> products)
+        {
+            var productGrains = products.ToList();
+            foreach (var product in productGrains)
+            {
+                await product.UpdateFrequentItems(productGrains.Where(p => p != product).ToList());
+            }
         }
 
         public OrderGrain(ILogger<OrderGrain> logger) : base(logger)

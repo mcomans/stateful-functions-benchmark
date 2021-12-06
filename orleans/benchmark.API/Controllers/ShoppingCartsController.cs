@@ -21,9 +21,9 @@ namespace benchmark.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Guid>> CreateShoppingCart()
+        public async Task<ActionResult<string>> CreateShoppingCart()
         {
-            return Guid.NewGuid();
+            return Guid.NewGuid().ToString();
         }
         
         [HttpPost("{id:guid}/products")]
