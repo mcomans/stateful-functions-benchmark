@@ -2,9 +2,15 @@ syntax = "proto3";
 
 package product.persistence;
 
+message FrequentItem {
+  string product_id = 1;
+  int32 amount = 2;
+}
+
 message Product {
   int32 price = 1;
   int32 stock = 2;
+  repeated FrequentItem frequent_items = 3;
 }
 
 message PriceChanged {
@@ -13,4 +19,8 @@ message PriceChanged {
 
 message StockChanged {
   int32 stock = 1;
+}
+
+message FrequentItemsChanged {
+  repeated string products = 1;
 }

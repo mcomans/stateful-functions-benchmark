@@ -34,9 +34,14 @@ message AddStockMessage {
   int32 amount = 2;
 }
 
+message UpdateFrequentItemsMessage {
+  repeated string products = 1;
+}
+
 service ProductService {
   rpc SetPrice(ProductPrice) returns (google.protobuf.Empty);
   rpc GetProduct(GetProductMessage) returns (ProductResponse);
   rpc RetractStock(RetractStockMessage) returns (RetractStockResponse);
   rpc AddStock(AddStockMessage) returns (google.protobuf.Empty);
+  rpc UpdateFrequentItems(UpdateFrequentItemsMessage) returns (google.protobuf.Empty);
 }

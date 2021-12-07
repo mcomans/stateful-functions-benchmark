@@ -15,14 +15,23 @@ import product.persistence.Domain
 class ProductEntity(@EntityId private val entityId: String) {
     private var price: Int = 0
     private var stock: Int = 0
+    private var frequentItems = mutableMapOf<String, Int>()
 
     @Snapshot
-    fun snapshot(): Domain.Product = Domain.Product.newBuilder().setPrice(price).setStock(stock).build()
+    fun snapshot(): Domain.Product = Domain.Product
+        .newBuilder()
+        .setPrice(price)
+        .setStock(stock)
+        .addAllFrequentItems(frequentItems.map {
+            Domain.FrequentItem.newBuilder().setProductId(it.key).setAmount(it.value).build()
+        })
+        .build()
 
     @SnapshotHandler
     fun snapshotHandler(product: Domain.Product) {
         price = product.price
         stock = product.stock
+        frequentItems.putAll(product.frequentItemsList.map { it.productId to it.amount })
     }
 
     @EventHandler
@@ -33,6 +42,15 @@ class ProductEntity(@EntityId private val entityId: String) {
     @EventHandler
     fun stockChanged(stockChanged: Domain.StockChanged) {
         this.stock = stockChanged.stock
+    }
+
+    @EventHandler
+    fun frequentItemsChanged(frequentItemsChanged: Domain.FrequentItemsChanged) {
+        for (item in frequentItemsChanged.productsList) {
+            val count = frequentItems[item]
+            val new = count?.plus(1) ?: 1
+            frequentItems[item] = new
+        }
     }
 
     @CommandHandler
@@ -63,5 +81,11 @@ class ProductEntity(@EntityId private val entityId: String) {
             return Product.RetractStockResponse.newBuilder().setPrice(price).setSuccess(true).build();
         }
         return Product.RetractStockResponse.newBuilder().setPrice(price).setSuccess(false).build();
+    }
+
+    @CommandHandler
+    fun updateFrequentItems(updateFrequentItemsMessage: Product.UpdateFrequentItemsMessage, ctx: CommandContext): Empty {
+        ctx.emit(Domain.FrequentItemsChanged.newBuilder().addAllProducts(updateFrequentItemsMessage.productsList).build())
+        return Empty.getDefaultInstance();
     }
 }
