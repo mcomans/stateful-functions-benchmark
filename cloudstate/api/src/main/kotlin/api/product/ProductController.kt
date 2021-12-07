@@ -33,6 +33,18 @@ class ProductController(val requestInfo: RequestInfo) {
         return productId;
     }
 
+    @GetMapping("/{productId}/freq-items")
+    fun getFrequentItems(@PathVariable productId: String, @RequestBody query: FrequentItemsQuery): List<String> {
+        val result = productStub.getFrequentItemsGraph(product.Product.GetFrequentItemsGraphMessage.newBuilder()
+            .setProductId(productId)
+            .setDepth(query.depth)
+            .setTop(query.top)
+            .build()
+        )
+
+        return result.itemsList
+    }
+
     private fun handleProductChange(productId: String, productBody: Product?) {
         if (productBody?.price != null) {
             productStub.setPrice(product.Product.ProductPrice.newBuilder().setProductId(productId).setPrice(productBody.price).build())
@@ -44,4 +56,5 @@ class ProductController(val requestInfo: RequestInfo) {
     }
 
     data class Product(val price: Int?, val stock: Int?)
+    data class FrequentItemsQuery(val depth: Int = 3, val top: Int = 3)
 }
