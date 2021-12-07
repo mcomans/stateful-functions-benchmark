@@ -24,6 +24,9 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("io.cloudstate:cloudstate-kotlin-support:0.5.2")
     implementation("com.google.api.grpc:proto-google-common-protos:2.6.0")
+    implementation("io.grpc:grpc-netty-shaded:1.41.0")
+    implementation("io.grpc:grpc-protobuf:1.41.0")
+    implementation("io.grpc:grpc-stub:1.41.0")
     implementation("com.google.protobuf:protobuf-java-util:3.18.0")
     protobuf(files("../shared-proto"))
 }
@@ -31,6 +34,22 @@ dependencies {
 protobuf {
     protoc {
         artifact = "com.google.protobuf:protoc:3.18.0"
+    }
+
+    plugins {
+        id("grpc") {
+            artifact = "io.grpc:protoc-gen-grpc-java:1.41.0:osx-x86_64"
+        }
+    }
+    generateProtoTasks {
+        all().forEach {
+            it.plugins {
+                id("grpc")
+            }
+//            it.builtins {
+//                id("kotlin")
+//            }
+        }
     }
 }
 

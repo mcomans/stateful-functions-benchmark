@@ -35,7 +35,19 @@ message AddStockMessage {
 }
 
 message UpdateFrequentItemsMessage {
-  repeated string products = 1;
+  string product_id = 1 [(.cloudstate.entity_key) = true];
+  repeated string products = 2;
+}
+
+message GetFrequentItemsGraphMessage {
+  string product_id = 1 [(.cloudstate.entity_key) = true];
+  int32 depth = 2;
+  int32 top = 3;
+  repeated string visited = 4;
+}
+
+message GetFrequentItemsGraphResponse {
+  repeated string items = 1;
 }
 
 service ProductService {
@@ -44,4 +56,5 @@ service ProductService {
   rpc RetractStock(RetractStockMessage) returns (RetractStockResponse);
   rpc AddStock(AddStockMessage) returns (google.protobuf.Empty);
   rpc UpdateFrequentItems(UpdateFrequentItemsMessage) returns (google.protobuf.Empty);
+  rpc GetFrequentItemsGraph(GetFrequentItemsGraphMessage) returns (GetFrequentItemsGraphResponse);
 }

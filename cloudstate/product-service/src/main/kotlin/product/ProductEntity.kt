@@ -8,6 +8,7 @@ import io.cloudstate.kotlinsupport.annotations.eventsourced.CommandHandler
 import io.cloudstate.kotlinsupport.annotations.eventsourced.EventHandler
 import io.cloudstate.kotlinsupport.annotations.eventsourced.EventSourcedEntity
 import io.cloudstate.kotlinsupport.annotations.eventsourced.SnapshotHandler
+import io.grpc.ManagedChannelBuilder
 import product.persistence.Domain
 
 
@@ -16,6 +17,10 @@ class ProductEntity(@EntityId private val entityId: String) {
     private var price: Int = 0
     private var stock: Int = 0
     private var frequentItems = mutableMapOf<String, Int>()
+
+    private val asyncProductStub = ProductServiceGrpc.newFutureStub(
+        ManagedChannelBuilder.forAddress("product-service", 80).usePlaintext().build()
+    )
 
     @Snapshot
     fun snapshot(): Domain.Product = Domain.Product
@@ -86,6 +91,33 @@ class ProductEntity(@EntityId private val entityId: String) {
     @CommandHandler
     fun updateFrequentItems(updateFrequentItemsMessage: Product.UpdateFrequentItemsMessage, ctx: CommandContext): Empty {
         ctx.emit(Domain.FrequentItemsChanged.newBuilder().addAllProducts(updateFrequentItemsMessage.productsList).build())
-        return Empty.getDefaultInstance();
+        return Empty.getDefaultInstance()
+    }
+
+    @CommandHandler
+    fun getFrequentItemsGraph(message: Product.GetFrequentItemsGraphMessage): Product.GetFrequentItemsGraphResponse {
+        val topItems = frequentItems.toList().sortedBy { it.second }.take(message.top).map { it.first }.filterNot { message.visitedList.contains(it) };
+        if (message.depth == 1) {
+            return Product.GetFrequentItemsGraphResponse
+                .newBuilder()
+                .addAllItems(topItems)
+                .build();
+        }
+
+        val futures = topItems.map {
+            asyncProductStub.getFrequentItemsGraph(
+               Product.GetFrequentItemsGraphMessage
+                   .newBuilder()
+                   .setProductId(it)
+                   .setDepth(message.depth - 1)
+                   .setTop(message.top)
+                   .addAllVisited(message.visitedList.union(topItems) + entityId)
+                   .build()
+            )
+        }
+
+        val items = futures.flatMap { it.get().itemsList }.toSet() + topItems
+
+        return Product.GetFrequentItemsGraphResponse.newBuilder().addAllItems(items).build()
     }
 }
