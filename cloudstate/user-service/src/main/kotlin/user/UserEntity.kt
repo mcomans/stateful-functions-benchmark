@@ -24,11 +24,14 @@ class UserEntity(@EntityId private val entityId: String) {
     }
 
     @CommandHandler
-    fun retractCredits(retractCreditsMessage: User.RetractCreditsMessage, ctx: CommandContext): Empty {
+    fun retractCredits(retractCreditsMessage: User.RetractCreditsMessage, ctx: CommandContext): User.RetractCreditsResponse {
         val newCredits = credits - retractCreditsMessage.amount;
         println("User $entityId - Retracting ${retractCreditsMessage.amount} credits. New credits: $newCredits")
-        ctx.emit(Domain.CreditsChanged.newBuilder().setCredits(newCredits).build())
-        return Empty.getDefaultInstance()
+        if (newCredits >= 0) {
+            ctx.emit(Domain.CreditsChanged.newBuilder().setCredits(newCredits).build())
+            return User.RetractCreditsResponse.newBuilder().setSuccess(true).build()
+        }
+        return User.RetractCreditsResponse.newBuilder().setSuccess(false).build()
     }
 
     @CommandHandler
