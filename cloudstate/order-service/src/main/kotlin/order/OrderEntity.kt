@@ -95,6 +95,16 @@ class OrderEntity(@EntityId private val entityId: String) {
         println("Order $entityId - Credits retracted, checkout complete")
         ctx.emit(Domain.StatusChanged.newBuilder().setStatus("COMPLETE").build())
 
+        // Send update frequent item message after checkout is completed
+        val productIds = contents.productsList.map { it.productId };
+        productIds.map {
+            asyncProductStub.updateFrequentItems(
+                Product.UpdateFrequentItemsMessage.newBuilder().setProductId(it).addAllProducts(
+                    productIds.filterNot { p -> p == it }
+                ).build()
+            )
+        }
+
         return Empty.getDefaultInstance()
     }
 
