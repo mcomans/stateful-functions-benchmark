@@ -8,10 +8,12 @@ package product;
 message ProductPrice {
   string product_id = 1 [(.cloudstate.entity_key) = true];
   int32 price = 2;
+  string request_id = 3;
 }
 
 message GetProductMessage {
   string product_id = 1 [(.cloudstate.entity_key) = true];
+  string request_id = 2;
 }
 
 message ProductResponse {
@@ -22,6 +24,7 @@ message ProductResponse {
 message RetractStockMessage {
   string product_id = 1 [(.cloudstate.entity_key) = true];
   int32 amount = 2;
+  string request_id = 3;
 }
 
 message RetractStockResponse {
@@ -32,11 +35,13 @@ message RetractStockResponse {
 message AddStockMessage {
   string product_id = 1 [(.cloudstate.entity_key) = true];
   int32 amount = 2;
+  string request_id = 3;
 }
 
 message UpdateFrequentItemsMessage {
   string product_id = 1 [(.cloudstate.entity_key) = true];
   repeated string products = 2;
+  string request_id = 3;
 }
 
 message GetFrequentItemsGraphMessage {
@@ -44,10 +49,12 @@ message GetFrequentItemsGraphMessage {
   int32 depth = 2;
   int32 top = 3;
   repeated string visited = 4;
+  string request_id = 5;
 }
 
 message GetFrequentItemsGraphResponse {
   repeated string items = 1;
+  string request_id = 2;
 }
 
 service ProductService {

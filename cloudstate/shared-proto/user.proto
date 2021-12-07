@@ -8,11 +8,13 @@ package user;
 message AddCreditsMessage {
   string user_id = 1 [(.cloudstate.entity_key) = true];
   int32 amount = 2;
+  string request_id = 3;
 }
 
 message RetractCreditsMessage {
   string user_id = 1 [(.cloudstate.entity_key) = true];
   int32 amount = 2;
+  string request_id = 3;
 }
 
 message RetractCreditsResponse {

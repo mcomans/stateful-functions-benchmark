@@ -26,6 +26,7 @@ class ShoppingCartController(val requestInfo: RequestInfo) {
                 .setCartId(cartId)
                 .setProductId(product.productId)
                 .setAmount(product.amount)
+                .setRequestId(requestInfo.requestId)
                 .build()
         )
     }
@@ -37,6 +38,7 @@ class ShoppingCartController(val requestInfo: RequestInfo) {
                 .setCartId(cartId)
                 .setProductId(product.productId)
                 .setAmount(product.amount)
+                .setRequestId(requestInfo.requestId)
                 .build()
         )
     }

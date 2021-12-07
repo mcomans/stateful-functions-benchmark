@@ -37,6 +37,7 @@ class ProductController(val requestInfo: RequestInfo) {
     fun getFrequentItems(@PathVariable productId: String, @RequestBody query: FrequentItemsQuery): List<String> {
         val result = productStub.getFrequentItemsGraph(product.Product.GetFrequentItemsGraphMessage.newBuilder()
             .setProductId(productId)
+            .setRequestId(requestInfo.requestId)
             .setDepth(query.depth)
             .setTop(query.top)
             .build()
@@ -47,10 +48,10 @@ class ProductController(val requestInfo: RequestInfo) {
 
     private fun handleProductChange(productId: String, productBody: Product?) {
         if (productBody?.price != null) {
-            productStub.setPrice(product.Product.ProductPrice.newBuilder().setProductId(productId).setPrice(productBody.price).build())
+            productStub.setPrice(product.Product.ProductPrice.newBuilder().setProductId(productId).setPrice(productBody.price).setRequestId(requestInfo.requestId).build())
         }
         if (productBody?.stock != null) {
-            productStub.addStock(product.Product.AddStockMessage.newBuilder().setProductId(productId).setAmount(productBody.stock).build())
+            productStub.addStock(product.Product.AddStockMessage.newBuilder().setProductId(productId).setAmount(productBody.stock).setRequestId(requestInfo.requestId).build())
         }
 
     }

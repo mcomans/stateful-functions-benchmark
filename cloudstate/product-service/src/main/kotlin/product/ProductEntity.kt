@@ -101,6 +101,7 @@ class ProductEntity(@EntityId private val entityId: String) {
             return Product.GetFrequentItemsGraphResponse
                 .newBuilder()
                 .addAllItems(topItems)
+                .setRequestId(message.requestId)
                 .build();
         }
 
@@ -112,6 +113,7 @@ class ProductEntity(@EntityId private val entityId: String) {
                    .setDepth(message.depth - 1)
                    .setTop(message.top)
                    .addAllVisited(message.visitedList.union(topItems) + entityId)
+                   .setRequestId(message.requestId)
                    .build()
             )
         }

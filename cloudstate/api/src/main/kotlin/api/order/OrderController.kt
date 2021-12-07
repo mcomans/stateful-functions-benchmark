@@ -26,6 +26,7 @@ class OrderController(val requestInfo: RequestInfo) {
                 .setOrderId(orderId)
                 .setUserId(orderCheckout.userId)
                 .setCartId(orderCheckout.cartId)
+                .setRequestId(requestInfo.requestId)
                 .build()
         )
 

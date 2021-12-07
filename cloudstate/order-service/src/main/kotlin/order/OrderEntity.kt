@@ -47,7 +47,9 @@ class OrderEntity(@EntityId private val entityId: String) {
     fun checkout(checkoutMessage: Order.CheckoutMessage, ctx: CommandContext): Empty {
         println("Order $entityId - Checkout started")
         val contents = asyncCartStub.getCartContents(
-            Shoppingcart.GetCartContentsMessage.newBuilder().setCartId(checkoutMessage.cartId).build()
+            Shoppingcart.GetCartContentsMessage.newBuilder()
+                .setCartId(checkoutMessage.cartId)
+                .setRequestId(checkoutMessage.requestId).build()
         ).get()
 
         println("Order $entityId - Cart contents received: ${contents.productsList}")
@@ -56,7 +58,11 @@ class OrderEntity(@EntityId private val entityId: String) {
 
         val retractStockCalls = contents.productsList.map {
             RetractStockFuture(asyncProductStub.retractStock(
-                Product.RetractStockMessage.newBuilder().setProductId(it.productId).setAmount(it.amount).build()
+                Product.RetractStockMessage.newBuilder()
+                    .setProductId(it.productId)
+                    .setAmount(it.amount)
+                    .setRequestId(checkoutMessage.requestId)
+                    .build()
             ), it.productId, it.amount)
         }
 
@@ -68,7 +74,7 @@ class OrderEntity(@EntityId private val entityId: String) {
         if (retractStockResponses.any { !it.success }) {
             println("Order $entityId - One or more products did not have enough stock. Adding stock to the other products to roll back")
 
-            rollback(retractStockResponses)
+            rollback(retractStockResponses, checkoutMessage.requestId)
 
             ctx.emit(Domain.StatusChanged.newBuilder().setStatus("FAILED_NOT_ENOUGH_STOCK").build())
             return Empty.getDefaultInstance()
@@ -80,13 +86,13 @@ class OrderEntity(@EntityId private val entityId: String) {
         val totalPrice = retractStockResponses.fold(0) { acc, completed -> acc + completed.amount * completed.price }
 
         val retractCreditsResponse = asyncUserStub.retractCredits(
-            User.RetractCreditsMessage.newBuilder().setAmount(totalPrice).build()
+            User.RetractCreditsMessage.newBuilder().setAmount(totalPrice).setRequestId(checkoutMessage.requestId).build()
         ).get()
 
         if (!retractCreditsResponse.success) {
             println("Order $entityId - User did not have enough credit. Adding stock to the products to roll back")
 
-            rollback(retractStockResponses)
+            rollback(retractStockResponses, checkoutMessage.requestId)
 
             ctx.emit(Domain.StatusChanged.newBuilder().setStatus("FAILED_NOT_ENOUGH_CREDIT").build())
             return Empty.getDefaultInstance()
@@ -101,16 +107,16 @@ class OrderEntity(@EntityId private val entityId: String) {
             asyncProductStub.updateFrequentItems(
                 Product.UpdateFrequentItemsMessage.newBuilder().setProductId(it).addAllProducts(
                     productIds.filterNot { p -> p == it }
-                ).build()
+                ).setRequestId(checkoutMessage.requestId).build()
             )
         }
 
         return Empty.getDefaultInstance()
     }
 
-    private fun rollback(retractStockResponses: Iterable<RetractStockCompleted>) {
+    private fun rollback(retractStockResponses: Iterable<RetractStockCompleted>, requestId: String) {
         val futures = retractStockResponses.filter { it.success }.map { asyncProductStub.addStock(
-            Product.AddStockMessage.newBuilder().setProductId(it.productId).setAmount(it.amount).build()
+            Product.AddStockMessage.newBuilder().setProductId(it.productId).setAmount(it.amount).setRequestId(requestId).build()
         ) }
 
         futures.map { it.get() }

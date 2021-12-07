@@ -20,7 +20,7 @@ class UserController(val requestInfo: RequestInfo) {
 
         if (userBody?.credits != null) {
             userStub.addCredits(
-                user.User.AddCreditsMessage.newBuilder().setUserId(userId).setAmount(userBody.credits).build()
+                user.User.AddCreditsMessage.newBuilder().setUserId(userId).setAmount(userBody.credits).setRequestId(requestInfo.requestId).build()
             )
         }
 
@@ -31,7 +31,7 @@ class UserController(val requestInfo: RequestInfo) {
     fun addCredit(@PathVariable userId: String, @RequestBody userBody: User?) {
         if (userBody?.credits != null) {
             userStub.addCredits(
-                user.User.AddCreditsMessage.newBuilder().setUserId(userId).setAmount(userBody.credits).build()
+                user.User.AddCreditsMessage.newBuilder().setUserId(userId).setAmount(userBody.credits).setRequestId(requestInfo.requestId).build()
             )
         }
     }
