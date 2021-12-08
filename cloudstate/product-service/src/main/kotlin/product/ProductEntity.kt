@@ -9,8 +9,11 @@ import io.cloudstate.kotlinsupport.annotations.eventsourced.EventHandler
 import io.cloudstate.kotlinsupport.annotations.eventsourced.EventSourcedEntity
 import io.cloudstate.kotlinsupport.annotations.eventsourced.SnapshotHandler
 import io.grpc.ManagedChannelBuilder
+import mu.KotlinLogging
+import mu.withLoggingContext
 import product.persistence.Domain
 
+private val logger = KotlinLogging.logger {}
 
 @EventSourcedEntity
 class ProductEntity(@EntityId private val entityId: String) {
@@ -60,9 +63,16 @@ class ProductEntity(@EntityId private val entityId: String) {
 
     @CommandHandler
     fun setPrice(price: Product.ProductPrice, ctx: CommandContext): Empty {
-        println("Product $entityId - new price: ${price.price}")
-        ctx.emit(Domain.PriceChanged.newBuilder().setPrice(price.price).build())
-        return Empty.getDefaultInstance()
+        withLoggingContext(
+            "requestId" to price.requestId,
+            "function" to "setPrice",
+            "entityType" to "product",
+            "entityId" to entityId,
+        ) {
+            logger.debug {"new price: ${price.price}"}
+            ctx.emit(Domain.PriceChanged.newBuilder().setPrice(price.price).build())
+            return Empty.getDefaultInstance()
+        }
     }
 
     @CommandHandler
@@ -71,55 +81,91 @@ class ProductEntity(@EntityId private val entityId: String) {
 
     @CommandHandler
     fun addStock(addStockMessage: Product.AddStockMessage, ctx: CommandContext): Empty {
-        val newStock = stock + addStockMessage.amount;
-        println("Product $entityId - Adding ${addStockMessage.amount} of stock. New stock: $newStock")
-        ctx.emit(Domain.StockChanged.newBuilder().setStock(newStock).build())
-        return Empty.getDefaultInstance()
+        withLoggingContext(
+            "requestId" to addStockMessage.requestId,
+            "function" to "setPrice",
+            "entityType" to "product",
+            "entityId" to entityId,
+        ) {
+            val newStock = stock + addStockMessage.amount;
+            logger.debug {"Adding ${addStockMessage.amount} of stock. New stock: $newStock"}
+            ctx.emit(Domain.StockChanged.newBuilder().setStock(newStock).build())
+            return Empty.getDefaultInstance()
+        }
     }
 
     @CommandHandler
     fun retractStock(retractStockMessage: Product.RetractStockMessage, ctx: CommandContext): Product.RetractStockResponse {
-        val newStock = stock - retractStockMessage.amount;
-        println("Product $entityId - Retracting ${retractStockMessage.amount} of stock. New stock: $newStock")
-        if (newStock >= 0) {
-            ctx.emit(Domain.StockChanged.newBuilder().setStock(newStock).build())
-            return Product.RetractStockResponse.newBuilder().setPrice(price).setSuccess(true).build();
+        withLoggingContext(
+            "requestId" to retractStockMessage.requestId,
+            "function" to "retractStock",
+            "entityType" to "product",
+            "entityId" to entityId,
+        ) {
+            val newStock = stock - retractStockMessage.amount;
+            logger.debug { "Retracting ${retractStockMessage.amount} of stock. New stock: $newStock" }
+            if (newStock >= 0) {
+                ctx.emit(Domain.StockChanged.newBuilder().setStock(newStock).build())
+                return Product.RetractStockResponse.newBuilder().setPrice(price).setSuccess(true).build();
+            }
+            return Product.RetractStockResponse.newBuilder().setPrice(price).setSuccess(false).build();
         }
-        return Product.RetractStockResponse.newBuilder().setPrice(price).setSuccess(false).build();
     }
 
     @CommandHandler
     fun updateFrequentItems(updateFrequentItemsMessage: Product.UpdateFrequentItemsMessage, ctx: CommandContext): Empty {
-        ctx.emit(Domain.FrequentItemsChanged.newBuilder().addAllProducts(updateFrequentItemsMessage.productsList).build())
-        return Empty.getDefaultInstance()
+        withLoggingContext(
+            "requestId" to updateFrequentItemsMessage.requestId,
+            "function" to "updateFrequentItems",
+            "entityType" to "product",
+            "entityId" to entityId,
+        ) {
+            logger.debug { "Updating frequent items" }
+            ctx.emit(
+                Domain.FrequentItemsChanged.newBuilder().addAllProducts(updateFrequentItemsMessage.productsList).build()
+            )
+            return Empty.getDefaultInstance()
+        }
     }
 
     @CommandHandler
     fun getFrequentItemsGraph(message: Product.GetFrequentItemsGraphMessage): Product.GetFrequentItemsGraphResponse {
-        val topItems = frequentItems.toList().sortedBy { it.second }.take(message.top).map { it.first }.filterNot { message.visitedList.contains(it) };
-        if (message.depth == 1) {
-            return Product.GetFrequentItemsGraphResponse
-                .newBuilder()
-                .addAllItems(topItems)
-                .setRequestId(message.requestId)
-                .build();
+        withLoggingContext(
+            "requestId" to message.requestId,
+            "function" to "getFrequentItemsGraph",
+            "entityType" to "product",
+            "entityId" to entityId,
+        ) {
+            logger.debug { "Getting top frequent items" }
+            val topItems = frequentItems.toList().sortedBy { it.second }.take(message.top).map { it.first }
+                .filterNot { message.visitedList.contains(it) };
+            if (message.depth == 1) {
+                logger.debug { "Depth is reached, returning top frequent items" }
+                return Product.GetFrequentItemsGraphResponse
+                    .newBuilder()
+                    .addAllItems(topItems)
+                    .setRequestId(message.requestId)
+                    .build();
+            }
+
+            logger.debug { "Recursively calling getFrequentItemsGraph on top frequent items" }
+            val futures = topItems.map {
+                asyncProductStub.getFrequentItemsGraph(
+                    Product.GetFrequentItemsGraphMessage
+                        .newBuilder()
+                        .setProductId(it)
+                        .setDepth(message.depth - 1)
+                        .setTop(message.top)
+                        .addAllVisited(message.visitedList.union(topItems) + entityId)
+                        .setRequestId(message.requestId)
+                        .build()
+                )
+            }
+
+            val items = futures.flatMap { it.get().itemsList }.toSet() + topItems
+            logger.debug { "Responses received, returning set of frequent items" }
+
+            return Product.GetFrequentItemsGraphResponse.newBuilder().addAllItems(items).build()
         }
-
-        val futures = topItems.map {
-            asyncProductStub.getFrequentItemsGraph(
-               Product.GetFrequentItemsGraphMessage
-                   .newBuilder()
-                   .setProductId(it)
-                   .setDepth(message.depth - 1)
-                   .setTop(message.top)
-                   .addAllVisited(message.visitedList.union(topItems) + entityId)
-                   .setRequestId(message.requestId)
-                   .build()
-            )
-        }
-
-        val items = futures.flatMap { it.get().itemsList }.toSet() + topItems
-
-        return Product.GetFrequentItemsGraphResponse.newBuilder().addAllItems(items).build()
     }
 }
