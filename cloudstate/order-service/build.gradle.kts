@@ -29,6 +29,9 @@ dependencies {
     implementation("io.grpc:grpc-stub:1.41.0")
     implementation("com.google.protobuf:protobuf-java-util:3.18.0")
     api("org.apache.tomcat:annotations-api:6.0.53")
+    implementation("net.logstash.logback:logstash-logback-encoder:6.6")
+    implementation("ch.qos.logback:logback-classic:1.2.3")
+    implementation("io.github.microutils:kotlin-logging-jvm:2.0.6")
     protobuf(files("../shared-proto"))
 }
 

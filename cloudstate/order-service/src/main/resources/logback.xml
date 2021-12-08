@@ -1,0 +1,26 @@
+<configuration>
+    <logger name="org.xnio.nio" additivity="false"/>
+    <logger name="org.xnio.nio.selector" additivity="false"/>
+    <logger name="io.undertow" additivity="false"/>
+    <logger name="org.xnio.listener" additivity="false"/>
+    <logger name="org.xnio.safe-close" additivity="false" />
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <pattern>yyyy-MM-dd'T'HH:mm:ss.SSSZ</pattern>
+                    <timezone>UTC</timezone>
+                </timestamp>
+                <loggerName/>
+                <mdc/>
+                <message />
+                <logLevel />
+                <threadName />
+            </providers>
+        </encoder>
+    </appender>
+    <root level="all">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>

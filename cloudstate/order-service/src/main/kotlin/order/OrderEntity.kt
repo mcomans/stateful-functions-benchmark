@@ -6,6 +6,8 @@ import io.cloudstate.javasupport.eventsourced.CommandContext
 import io.cloudstate.kotlinsupport.annotations.EntityId
 import io.cloudstate.kotlinsupport.annotations.eventsourced.*
 import io.grpc.ManagedChannelBuilder
+import mu.KotlinLogging
+import mu.withLoggingContext
 import order.persistence.Domain
 import product.Product
 import product.ProductServiceGrpc
@@ -13,6 +15,8 @@ import shoppingcart.ShoppingCartServiceGrpc
 import shoppingcart.Shoppingcart
 import user.User
 import user.UserServiceGrpc
+
+private val logger = KotlinLogging.logger { }
 
 @EventSourcedEntity
 class OrderEntity(@EntityId private val entityId: String) {
@@ -45,73 +49,80 @@ class OrderEntity(@EntityId private val entityId: String) {
 
     @CommandHandler
     fun checkout(checkoutMessage: Order.CheckoutMessage, ctx: CommandContext): Empty {
-        println("Order $entityId - Checkout started")
-        val contents = asyncCartStub.getCartContents(
-            Shoppingcart.GetCartContentsMessage.newBuilder()
-                .setCartId(checkoutMessage.cartId)
-                .setRequestId(checkoutMessage.requestId).build()
-        ).get()
+        withLoggingContext(
+            "requestId" to checkoutMessage.requestId,
+            "function" to "checkout",
+            "entityType" to "order",
+            "entityId" to entityId,
+        ) {
+            logger.debug { "Checkout started" }
+            val contents = asyncCartStub.getCartContents(
+                Shoppingcart.GetCartContentsMessage.newBuilder()
+                    .setCartId(checkoutMessage.cartId)
+                    .setRequestId(checkoutMessage.requestId).build()
+            ).get()
 
-        println("Order $entityId - Cart contents received: ${contents.productsList}")
+            logger.debug { "Order $entityId - Cart contents received: ${contents.productsList}" }
 
-        ctx.emit(Domain.StatusChanged.newBuilder().setStatus("CART_CONTENTS_RECEIVED").build())
+            ctx.emit(Domain.StatusChanged.newBuilder().setStatus("CART_CONTENTS_RECEIVED").build())
 
-        val retractStockCalls = contents.productsList.map {
-            RetractStockFuture(asyncProductStub.retractStock(
-                Product.RetractStockMessage.newBuilder()
-                    .setProductId(it.productId)
-                    .setAmount(it.amount)
-                    .setRequestId(checkoutMessage.requestId)
-                    .build()
-            ), it.productId, it.amount)
-        }
+            val retractStockCalls = contents.productsList.map {
+                RetractStockFuture(asyncProductStub.retractStock(
+                    Product.RetractStockMessage.newBuilder()
+                        .setProductId(it.productId)
+                        .setAmount(it.amount)
+                        .setRequestId(checkoutMessage.requestId)
+                        .build()
+                ), it.productId, it.amount)
+            }
 
-        val retractStockResponses = retractStockCalls.map {
-            val response = it.future.get()
-            RetractStockCompleted(response.success, response.price, it.productId, it.amount)
-        }
+            val retractStockResponses = retractStockCalls.map {
+                val response = it.future.get()
+                RetractStockCompleted(response.success, response.price, it.productId, it.amount)
+            }
 
-        if (retractStockResponses.any { !it.success }) {
-            println("Order $entityId - One or more products did not have enough stock. Adding stock to the other products to roll back")
+            if (retractStockResponses.any { !it.success }) {
+                logger.debug { "One or more products did not have enough stock. Adding stock to the other products to roll back" }
 
-            rollback(retractStockResponses, checkoutMessage.requestId)
+                rollback(retractStockResponses, checkoutMessage.requestId)
 
-            ctx.emit(Domain.StatusChanged.newBuilder().setStatus("FAILED_NOT_ENOUGH_STOCK").build())
+                ctx.emit(Domain.StatusChanged.newBuilder().setStatus("FAILED_NOT_ENOUGH_STOCK").build())
+                return Empty.getDefaultInstance()
+            }
+
+            logger.debug { "All stock retracted" }
+            ctx.emit(Domain.StatusChanged.newBuilder().setStatus("STOCK_RETRACTED").build())
+
+            val totalPrice = retractStockResponses.fold(0) { acc, completed -> acc + completed.amount * completed.price }
+
+            val retractCreditsResponse = asyncUserStub.retractCredits(
+                User.RetractCreditsMessage.newBuilder().setAmount(totalPrice).setRequestId(checkoutMessage.requestId).build()
+            ).get()
+
+            if (!retractCreditsResponse.success) {
+                logger.debug { "User did not have enough credit. Adding stock to the products to roll back" }
+
+                rollback(retractStockResponses, checkoutMessage.requestId)
+
+                ctx.emit(Domain.StatusChanged.newBuilder().setStatus("FAILED_NOT_ENOUGH_CREDIT").build())
+                return Empty.getDefaultInstance()
+            }
+
+            logger.debug { "Credits retracted, checkout complete" }
+            ctx.emit(Domain.StatusChanged.newBuilder().setStatus("COMPLETE").build())
+
+            // Send update frequent item message after checkout is completed
+            val productIds = contents.productsList.map { it.productId };
+            productIds.map {
+                asyncProductStub.updateFrequentItems(
+                    Product.UpdateFrequentItemsMessage.newBuilder().setProductId(it).addAllProducts(
+                        productIds.filterNot { p -> p == it }
+                    ).setRequestId(checkoutMessage.requestId).build()
+                )
+            }
+
             return Empty.getDefaultInstance()
         }
-
-        println("Order $entityId - All stock retracted")
-        ctx.emit(Domain.StatusChanged.newBuilder().setStatus("STOCK_RETRACTED").build())
-
-        val totalPrice = retractStockResponses.fold(0) { acc, completed -> acc + completed.amount * completed.price }
-
-        val retractCreditsResponse = asyncUserStub.retractCredits(
-            User.RetractCreditsMessage.newBuilder().setAmount(totalPrice).setRequestId(checkoutMessage.requestId).build()
-        ).get()
-
-        if (!retractCreditsResponse.success) {
-            println("Order $entityId - User did not have enough credit. Adding stock to the products to roll back")
-
-            rollback(retractStockResponses, checkoutMessage.requestId)
-
-            ctx.emit(Domain.StatusChanged.newBuilder().setStatus("FAILED_NOT_ENOUGH_CREDIT").build())
-            return Empty.getDefaultInstance()
-        }
-
-        println("Order $entityId - Credits retracted, checkout complete")
-        ctx.emit(Domain.StatusChanged.newBuilder().setStatus("COMPLETE").build())
-
-        // Send update frequent item message after checkout is completed
-        val productIds = contents.productsList.map { it.productId };
-        productIds.map {
-            asyncProductStub.updateFrequentItems(
-                Product.UpdateFrequentItemsMessage.newBuilder().setProductId(it).addAllProducts(
-                    productIds.filterNot { p -> p == it }
-                ).setRequestId(checkoutMessage.requestId).build()
-            )
-        }
-
-        return Empty.getDefaultInstance()
     }
 
     private fun rollback(retractStockResponses: Iterable<RetractStockCompleted>, requestId: String) {
