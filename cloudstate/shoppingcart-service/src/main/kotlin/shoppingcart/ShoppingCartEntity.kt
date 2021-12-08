@@ -4,7 +4,11 @@ import com.google.protobuf.Empty
 import io.cloudstate.javasupport.eventsourced.CommandContext
 import io.cloudstate.kotlinsupport.annotations.EntityId
 import io.cloudstate.kotlinsupport.annotations.eventsourced.*
+import mu.KotlinLogging
+import mu.withLoggingContext
 import shoppingcart.persistence.Domain
+
+private val logger = KotlinLogging.logger {}
 
 @EventSourcedEntity
 class ShoppingCartEntity(@EntityId private val entityId: String) {
@@ -46,23 +50,51 @@ class ShoppingCartEntity(@EntityId private val entityId: String) {
 
    @CommandHandler
    fun getCartContents(getCartContentsMessage: Shoppingcart.GetCartContentsMessage): Shoppingcart.GetCartContentsResponse {
-      return Shoppingcart.GetCartContentsResponse.newBuilder().addAllProducts(
-         cart.map { Shoppingcart.CartProduct.newBuilder().setProductId(it.key).setAmount(it.value.amount).build() }
-      ).build()
+      withLoggingContext(
+         "requestId" to getCartContentsMessage.requestId,
+         "function" to "getCartContents",
+         "entityType" to "shopping-cart",
+         "entityId" to entityId,
+      ) {
+         logger.debug { "Returning cart contents" }
+         return Shoppingcart.GetCartContentsResponse.newBuilder().addAllProducts(
+            cart.map { Shoppingcart.CartProduct.newBuilder().setProductId(it.key).setAmount(it.value.amount).build() }
+         ).build()
+      }
    }
 
    @CommandHandler
    fun addToCart(addToCartMessage: Shoppingcart.AddToCartMessage, ctx: CommandContext): Empty {
-      println("Cart $entityId - Adding product ${addToCartMessage.productId} with amount ${addToCartMessage.amount}")
-      ctx.emit(Domain.ProductAdded.newBuilder().setProductId(addToCartMessage.productId).setAmount(addToCartMessage.amount).build())
-      return Empty.getDefaultInstance()
+      withLoggingContext(
+         "requestId" to addToCartMessage.requestId,
+         "function" to "addToCart",
+         "entityType" to "shopping-cart",
+         "entityId" to entityId,
+      ) {
+         logger.debug { "Adding product ${addToCartMessage.productId} with amount ${addToCartMessage.amount}" }
+         ctx.emit(
+            Domain.ProductAdded.newBuilder().setProductId(addToCartMessage.productId).setAmount(addToCartMessage.amount)
+               .build()
+         )
+         return Empty.getDefaultInstance()
+      }
    }
 
    @CommandHandler
    fun removeFromCart(removeFromCartMessage: Shoppingcart.RemoveFromCartMessage, ctx: CommandContext): Empty {
-      println("Cart $entityId - Removing product ${removeFromCartMessage.productId} with amount ${removeFromCartMessage.amount}")
-      ctx.emit(Domain.ProductRemoved.newBuilder().setProductId(removeFromCartMessage.productId).setAmount(removeFromCartMessage.amount).build())
-      return Empty.getDefaultInstance()
+      withLoggingContext(
+         "requestId" to removeFromCartMessage.requestId,
+         "function" to "removeFromCart",
+         "entityType" to "shopping-cart",
+         "entityId" to entityId,
+      ) {
+         logger.debug { "Removing product ${removeFromCartMessage.productId} with amount ${removeFromCartMessage.amount}" }
+         ctx.emit(
+            Domain.ProductRemoved.newBuilder().setProductId(removeFromCartMessage.productId)
+               .setAmount(removeFromCartMessage.amount).build()
+         )
+         return Empty.getDefaultInstance()
+      }
    }
 
    data class ShoppingCartProduct(val productId: String, val amount: Int)
