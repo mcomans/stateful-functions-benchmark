@@ -17,27 +17,31 @@ namespace benchmark.API
                 .Enrich.FromLogContext()
                 .WriteTo.Console(new CompactJsonFormatter())
                 .CreateLogger();
-            
+
             CreateHostBuilder(args).Build().Run();
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
+        public static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            return Host.CreateDefaultBuilder(args)
                 .UseOrleans(siloBuilder =>
                 {
                     siloBuilder
-                        // .UseAdoNetClustering(options =>
-                        // {
-                        //     options.Invariant = "Npgsql";
-                        //     options.ConnectionString = "User ID=postgres;Host=localhost;Port=5432;Database=benchmark-orleans;Pooling=true;";
-                        // })
-                        // .AddAdoNetGrainStorage("benchmarkStore", options =>
-                        // {
-                        //     options.Invariant = "Npgsql";
-                        //     options.ConnectionString = "User ID=postgres;Host=localhost;Port=5432;Database=benchmark-orleans;Pooling=true;";
-                        //     options.UseJsonFormat = true;
-                        // })
-                        .UseLocalhostClustering()
+                        .UseAdoNetClustering(options =>
+                        {
+                            options.Invariant = "Npgsql";
+                            options.ConnectionString =
+                                "User ID=postgres;Host=localhost;Port=5432;Database=benchmark-orleans;Pooling=true;";
+                        })
+                        .AddAdoNetGrainStorage("benchmarkStore", options =>
+                        {
+                            options.Invariant = "Npgsql";
+                            options.ConnectionString =
+                                "User ID=postgres;Host=localhost;Port=5432;Database=benchmark-orleans;Pooling=true;";
+                            options.UseJsonFormat = true;
+                        })
+                        // .UseLocalhostClustering()
+                        .UseKubernetesHosting()
                         .AddMemoryGrainStorage("benchmarkStore")
                         .Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromMinutes(1))
                         .Configure<ClusterOptions>(opts =>
@@ -49,5 +53,6 @@ namespace benchmark.API
                 })
                 .UseSerilog()
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
+        }
     }
 }

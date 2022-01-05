@@ -11,22 +11,19 @@ namespace benchmark.Grains
     {
         private readonly IPersistentState<ShoppingCartState> _shoppingCartState;
 
-        public ShoppingCartGrain([PersistentState("shoppingCart", "benchmarkStore")]
-            IPersistentState<ShoppingCartState> shoppingCartState, ILogger<ShoppingCartGrain> logger) : base(logger)
+        public ShoppingCartGrain(
+            [PersistentState("shoppingCart", "benchmarkStore")] IPersistentState<ShoppingCartState> shoppingCartState,
+            ILogger<ShoppingCartGrain> logger) : base(logger)
         {
             _shoppingCartState = shoppingCartState;
         }
-        
+
         public async Task AddToCart(IProductGrain product, int amount)
         {
             if (_shoppingCartState.State.Contents.ContainsKey(product))
-            {
                 _shoppingCartState.State.Contents[product] += amount;
-            }
             else
-            {
                 _shoppingCartState.State.Contents.Add(product, amount);
-            }
 
             await _shoppingCartState.WriteStateAsync();
         }
@@ -34,9 +31,7 @@ namespace benchmark.Grains
         public async Task RemoveFromCart(IProductGrain product, int amount)
         {
             if (_shoppingCartState.State.Contents.ContainsKey(product))
-            {
                 _shoppingCartState.State.Contents[product] -= amount;
-            }
 
             await _shoppingCartState.WriteStateAsync();
         }
@@ -49,6 +44,6 @@ namespace benchmark.Grains
 
     public class ShoppingCartState
     {
-        public Dictionary<IProductGrain, int> Contents { get; } = new Dictionary<IProductGrain, int>();
+        public Dictionary<IProductGrain, int> Contents { get; } = new();
     }
 }

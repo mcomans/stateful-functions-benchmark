@@ -13,8 +13,8 @@ namespace benchmark.API.Controllers
     [Route("products")]
     public class ProductsController : ControllerBase
     {
-        private readonly ILogger<ProductsController> _logger;
         private readonly IGrainFactory _client;
+        private readonly ILogger<ProductsController> _logger;
 
         public ProductsController(ILogger<ProductsController> logger, IGrainFactory client)
         {
@@ -25,17 +25,11 @@ namespace benchmark.API.Controllers
         [HttpPost]
         public async Task<ActionResult<string>> AddProduct([FromBody] Product product)
         {
-            var id =  Guid.NewGuid();
+            var id = Guid.NewGuid();
             var productGrain = _client.GetGrain<IProductGrain>(id);
-            if (product.Price.HasValue)
-            {
-                await productGrain.SetPrice(product.Price.Value);
-            }
+            if (product.Price.HasValue) await productGrain.SetPrice(product.Price.Value);
 
-            if (product.Stock.HasValue)
-            {
-                await productGrain.IncreaseStock(product.Stock.Value);
-            }
+            if (product.Stock.HasValue) await productGrain.IncreaseStock(product.Stock.Value);
 
             return id.ToString();
         }
@@ -44,21 +38,15 @@ namespace benchmark.API.Controllers
         public async Task<ActionResult> PatchProduct(Guid id, [FromBody] Product product)
         {
             var productGrain = _client.GetGrain<IProductGrain>(id);
-            if (product.Price.HasValue)
-            {
-                await productGrain.SetPrice(product.Price.Value);
-            }
+            if (product.Price.HasValue) await productGrain.SetPrice(product.Price.Value);
 
-            if (product.Stock.HasValue)
-            {
-                await productGrain.IncreaseStock(product.Stock.Value);
-            }
+            if (product.Stock.HasValue) await productGrain.IncreaseStock(product.Stock.Value);
 
             return Ok();
         }
 
         [HttpGet("{id:guid}/price")]
-        public async Task<int>GetPrice(Guid id)
+        public async Task<int> GetPrice(Guid id)
         {
             var price = await _client.GetGrain<IProductGrain>(id).GetPrice();
             return price;
@@ -72,9 +60,8 @@ namespace benchmark.API.Controllers
 
             return products.Select(p => p.GetPrimaryKey().ToString()).ToList();
         }
-
     }
-    
+
     public class Product
     {
         public int? Price { get; set; }

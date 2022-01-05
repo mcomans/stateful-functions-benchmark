@@ -9,12 +9,12 @@ namespace benchmark.Grains
     {
         private readonly IPersistentState<UserState> _userState;
 
-        public UserGrain([PersistentState("user", "benchmarkStore")] IPersistentState<UserState> userState, 
+        public UserGrain([PersistentState("user", "benchmarkStore")] IPersistentState<UserState> userState,
             ILogger<UserGrain> logger) : base(logger)
         {
             _userState = userState;
         }
-        
+
         public async Task AddCredit(int amount)
         {
             _userState.State.Credits += amount;
@@ -23,11 +23,8 @@ namespace benchmark.Grains
 
         public async Task<bool> RetractCredit(int amount)
         {
-            if (_userState.State.Credits - amount < 0)
-            {
-                return false;
-            }
-            
+            if (_userState.State.Credits - amount < 0) return false;
+
             _userState.State.Credits -= amount;
             await _userState.WriteStateAsync();
 
@@ -37,6 +34,6 @@ namespace benchmark.Grains
 
     public class UserState
     {
-        public int Credits { get; set; } = 0;
+        public int Credits { get; set; }
     }
 }

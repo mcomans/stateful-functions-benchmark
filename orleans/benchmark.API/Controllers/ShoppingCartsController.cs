@@ -11,8 +11,8 @@ namespace benchmark.API.Controllers
     [Route("shopping-carts")]
     public class ShoppingCartsController : ControllerBase
     {
-        private readonly ILogger<ShoppingCartsController> _logger;
         private readonly IGrainFactory _client;
+        private readonly ILogger<ShoppingCartsController> _logger;
 
         public ShoppingCartsController(ILogger<ShoppingCartsController> logger, IGrainFactory client)
         {
@@ -25,7 +25,7 @@ namespace benchmark.API.Controllers
         {
             return Guid.NewGuid().ToString();
         }
-        
+
         [HttpPost("{id:guid}/products")]
         public async Task<ActionResult> AddProductToShoppingCart(Guid id, [FromBody] ShoppingCartProduct product)
         {
@@ -34,7 +34,7 @@ namespace benchmark.API.Controllers
             await shoppingCart.AddToCart(productGrain, product.Amount);
             return new OkResult();
         }
-        
+
         [HttpDelete("{id:guid}/products")]
         public async Task<ActionResult> RemoveProductFromShoppingCart(Guid id, [FromBody] ShoppingCartProduct product)
         {

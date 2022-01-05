@@ -11,8 +11,8 @@ namespace benchmark.API.Controllers
     [Route("orders")]
     public class OrdersController : ControllerBase
     {
-        private readonly ILogger<OrdersController> _logger;
         private readonly IGrainFactory _client;
+        private readonly ILogger<OrdersController> _logger;
 
         public OrdersController(ILogger<OrdersController> logger, IGrainFactory client)
         {
@@ -23,13 +23,13 @@ namespace benchmark.API.Controllers
         [HttpPost("checkout")]
         public async Task<ActionResult> CheckoutOrder([FromBody] Order order)
         {
-            var id =  Guid.NewGuid();
+            var id = Guid.NewGuid();
             var grain = _client.GetGrain<IOrderGrain>(id);
             var shoppingCart = _client.GetGrain<IShoppingCartGrain>(order.CartId);
             var user = _client.GetGrain<IUserGrain>(order.UserId);
 
             var success = await grain.Checkout(shoppingCart, user);
-            
+
             return success ? Ok() : Problem("Checkout failed");
         }
     }

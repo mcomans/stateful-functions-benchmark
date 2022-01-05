@@ -8,18 +8,18 @@ namespace benchmark.API.Filters
 {
     public class TracingActionFilter : IActionFilter
     {
-        private ILogger<TracingActionFilter> _logger;
+        private readonly ILogger<TracingActionFilter> _logger;
 
         public TracingActionFilter(ILogger<TracingActionFilter> logger)
         {
-            this._logger = logger;
+            _logger = logger;
         }
 
         public void OnActionExecuting(ActionExecutingContext context)
         {
             var traceId = Guid.NewGuid();
             RequestContext.Set("traceId", traceId);
-            
+
             using (_logger.BeginScope(new Dictionary<string, object>
             {
                 ["traceId"] = traceId,
@@ -35,7 +35,7 @@ namespace benchmark.API.Filters
 
         public void OnActionExecuted(ActionExecutedContext context)
         {
-            var traceId = RequestContext.Get("traceId");   
+            var traceId = RequestContext.Get("traceId");
             using (_logger.BeginScope(new Dictionary<string, object>
             {
                 ["traceId"] = traceId,

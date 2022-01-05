@@ -11,8 +11,8 @@ namespace benchmark.API.Controllers
     [Route("users")]
     public class UsersController : ControllerBase
     {
-        private readonly ILogger<UsersController> _logger;
         private readonly IGrainFactory _client;
+        private readonly ILogger<UsersController> _logger;
 
         public UsersController(ILogger<UsersController> logger, IGrainFactory client)
         {
@@ -27,10 +27,7 @@ namespace benchmark.API.Controllers
 
             var grain = _client.GetGrain<IUserGrain>(id);
 
-            if (user.Credits > 0)
-            {
-                await grain.AddCredit(user.Credits);
-            }
+            if (user.Credits > 0) await grain.AddCredit(user.Credits);
 
             return id.ToString();
         }
@@ -44,7 +41,7 @@ namespace benchmark.API.Controllers
 
             return Ok();
         }
-        
+
         [HttpPatch("{id:guid}/credits/retract")]
         public async Task<ActionResult> RetractCredit(Guid id, [FromBody] User user)
         {
@@ -54,7 +51,6 @@ namespace benchmark.API.Controllers
 
             return Ok();
         }
-
     }
 
     public class User

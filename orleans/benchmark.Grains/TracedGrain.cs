@@ -8,7 +8,7 @@ namespace benchmark.Grains
 {
     public class TracedGrain : Grain, IIncomingGrainCallFilter, IOutgoingGrainCallFilter
     {
-        private ILogger<TracedGrain> _logger;
+        private readonly ILogger<TracedGrain> _logger;
 
         public TracedGrain(ILogger<TracedGrain> logger)
         {
