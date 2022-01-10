@@ -24,32 +24,31 @@ namespace benchmark.API
         public static IHostBuilder CreateHostBuilder(string[] args)
         {
             return Host.CreateDefaultBuilder(args)
-                .UseOrleans(siloBuilder =>
+                .UseOrleans((ctx, siloBuilder) =>
                 {
-                    siloBuilder
-                        .UseAdoNetClustering(options =>
-                        {
-                            options.Invariant = "Npgsql";
-                            options.ConnectionString =
-                                "User ID=postgres;Host=localhost;Port=5432;Database=benchmark-orleans;Pooling=true;";
-                        })
-                        .AddAdoNetGrainStorage("benchmarkStore", options =>
-                        {
-                            options.Invariant = "Npgsql";
-                            options.ConnectionString =
-                                "User ID=postgres;Host=localhost;Port=5432;Database=benchmark-orleans;Pooling=true;";
-                            options.UseJsonFormat = true;
-                        })
-                        // .UseLocalhostClustering()
-                        .UseKubernetesHosting()
-                        .AddMemoryGrainStorage("benchmarkStore")
-                        .Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromMinutes(1))
-                        .Configure<ClusterOptions>(opts =>
-                        {
-                            opts.ClusterId = "dev";
-                            opts.ServiceId = "BenchmarkAPIService";
-                        })
-                        .Configure<EndpointOptions>(opts => opts.AdvertisedIPAddress = IPAddress.Loopback);
+                    if (ctx.HostingEnvironment.IsDevelopment())
+                    {
+                        siloBuilder
+                            .UseLocalhostClustering()
+                            .AddMemoryGrainStorage("benchmarkStore");
+                    }
+                    else
+                    {
+                        var psqlConnectionString = Environment.GetEnvironmentVariable("PSQL_CONNECTION_STRING")!;
+                        siloBuilder
+                            .UseKubernetesHosting()
+                            .UseAdoNetClustering(options =>
+                            {
+                                options.Invariant = "Npgsql";
+                                options.ConnectionString = psqlConnectionString;
+                            })
+                            .AddAdoNetGrainStorage("benchmarkStore", options =>
+                            {
+                                options.Invariant = "Npgsql";
+                                options.ConnectionString = psqlConnectionString;
+                                options.UseJsonFormat = true;
+                            });
+                    }
                 })
                 .UseSerilog()
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
