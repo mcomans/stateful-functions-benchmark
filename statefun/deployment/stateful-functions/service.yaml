@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: benchmark-stateful-functions
+spec:
+  selector:
+    app: benchmark-stateful-functions
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 1108
+      targetPort: 1108

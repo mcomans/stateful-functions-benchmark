@@ -1,10 +1,5 @@
-FROM gradle:jdk11-slim AS builder
-COPY --chown=gradle:gradle . /home/gradle/src
-WORKDIR /home/gradle/src/stateful-functions
-RUN gradle :stateful-functions:assemble --no-daemon
-
-FROM openjdk:11
+FROM eclipse-temurin:11-jre-focal
 WORKDIR /
-COPY --from=builder /home/gradle/src/stateful-functions/build/libs/stateful-functions*.jar stateful-functions.jar
+COPY stateful-functions/build/libs/stateful-functions-0.0.1.jar stateful-functions.jar
 EXPOSE 1108
 CMD java -jar stateful-functions.jar

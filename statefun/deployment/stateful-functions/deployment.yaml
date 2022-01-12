@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: benchmark-stateful-functions
+spec:
+  replicas: 1
+  selector:
+      matchLabels:
+        app: benchmark-stateful-functions
+  template:
+    metadata:
+      labels:
+        app: benchmark-stateful-functions
+    spec:
+      containers:
+        - name: main
+          image: benchmark-statefun-functions
+          # imagePullPolicy: Always
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 1108

@@ -1,0 +1,17 @@
+# From https://nightlies.apache.org/flink/flink-statefun-docs-release-3.0/docs/deployment/overview/
+apiVersion: v1
+kind: Service
+metadata:
+  name: statefun-jobmanager
+spec:
+  type: ClusterIP
+  ports:
+    - name: rpc
+      port: 6123
+    - name: blob-server
+      port: 6124
+    - name: webui
+      port: 8081
+  selector:
+    app: statefun
+    component: jobmanager

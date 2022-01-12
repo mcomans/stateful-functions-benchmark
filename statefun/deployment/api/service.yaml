@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: benchmark-api
+spec:
+  selector:
+    app: benchmark-api
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

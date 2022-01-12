@@ -1,0 +1,61 @@
+# From https://nightlies.apache.org/flink/flink-statefun-docs-release-3.0/docs/deployment/overview/
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: statefun-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: statefun
+      component: worker
+  template:
+    metadata:
+      labels:
+        app: statefun
+        component: worker
+    spec:
+      containers:
+        - name: worker
+          image: apache/flink-statefun:3.1.0
+          imagePullPolicy: Always
+          env:
+            - name: ROLE
+              value: worker
+            - name: MASTER_HOST
+              value: statefun-jobmanager
+          resources:
+            requests:
+              memory: "1.5Gi"
+          ports:
+            - containerPort: 6122
+              name: rpc
+            - containerPort: 6124
+              name: blob
+            - containerPort: 8081
+              name: ui
+          livenessProbe:
+            tcpSocket:
+              port: 6122
+            initialDelaySeconds: 30
+            periodSeconds: 60
+          volumeMounts:
+            - name: flink-config-volume
+              mountPath: /opt/flink/conf
+            - name: application-module
+              mountPath: /opt/statefun/modules/application
+      volumes:
+        - name: flink-config-volume
+          configMap:
+            name: flink-config
+            items:
+              - key: flink-conf.yaml
+                path: flink-conf.yaml
+              - key: log4j-console.properties
+                path: log4j-console.properties
+        - name: application-module
+          configMap:
+            name: application-module
+            items:
+              - key: module.yaml
+                path: module.yaml

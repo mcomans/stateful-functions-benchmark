@@ -1,0 +1,18 @@
+# From https://nightlies.apache.org/flink/flink-statefun-docs-release-3.0/docs/deployment/overview/
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: application-module
+  namespace: statefun
+  labels:
+    app: statefun
+data:
+  module.yaml: |+
+    version: "3.0"
+    module:
+      meta:
+        type: remote
+      spec:
+        endpoints:
+        ingresses:
+        egresses:
