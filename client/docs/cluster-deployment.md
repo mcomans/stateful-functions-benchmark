@@ -20,7 +20,7 @@ LOAD_BALANCER_IP_1="$(kubectl get svc --namespace default kafka-0-external -o js
 helm upgrade --namespace default kafka bitnami/kafka \
       --set replicaCount=1 \
       --set externalAccess.enabled=true \
-      --set externalAccess.service.loadBalancerIPs[0]=$LOAD_BALANCER_IP_1 \
+      --set 'externalAccess.service.loadBalancerIPs[0]'=$LOAD_BALANCER_IP_1 \
       --set externalAccess.service.type=LoadBalancer
 ```
 4. Deploy fluentd DaemonSet:
