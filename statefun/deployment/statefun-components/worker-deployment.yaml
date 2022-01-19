@@ -43,7 +43,7 @@ spec:
             - name: flink-config-volume
               mountPath: /opt/flink/conf
             - name: application-module
-              mountPath: /opt/statefun/modules/application
+              mountPath: /opt/statefun/modules/benchmark
       volumes:
         - name: flink-config-volume
           configMap:

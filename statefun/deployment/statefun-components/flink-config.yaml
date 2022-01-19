@@ -26,17 +26,17 @@ data:
     taskmanager.memory.process.size: 1g
     parallelism.default: 2
   log4j-console.properties: |+
-    rootLogger.level = DEBUG
+    rootLogger.level = ALL
     rootLogger.appenderRef.console.ref = ConsoleAppender
     rootLogger.appenderRef.rolling.ref = RollingFileAppender
     logger.akka.name = akka
-    logger.akka.level = DEBUG
+    logger.akka.level = ALL
     logger.kafka.name= org.apache.kafka
-    logger.kafka.level = DEBUG
+    logger.kafka.level = ALL
     logger.hadoop.name = org.apache.hadoop
-    logger.hadoop.level = DEBUG
+    logger.hadoop.level = ALL
     logger.zookeeper.name = org.apache.zookeeper
-    logger.zookeeper.level = DEBUG
+    logger.zookeeper.level = ALL
     appender.console.name = ConsoleAppender
     appender.console.type = CONSOLE
     appender.console.layout.type = PatternLayout
@@ -56,3 +56,4 @@ data:
     logger.netty.name = org.apache.flink.shaded.akka.org.jboss.netty.channel.DefaultChannelPipeline
     logger.netty.level = OFF
   
+

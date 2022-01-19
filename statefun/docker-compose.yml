@@ -1,17 +1,16 @@
 version: "2.1"
 
 services:
-
   ###############################################################
   #    Functions service
   ###############################################################
 
-#  benchmark-functions:
-#    build:
-#      dockerfile: stateful-functions/Dockerfile
-#      context: .
-#    expose:
-#      - "1108"
+  benchmark-stateful-functions:
+    build:
+      dockerfile: stateful-functions/Dockerfile
+      context: .
+    expose:
+      - "1108"
 
   ###############################################################
   #    StateFun runtime
@@ -27,7 +26,7 @@ services:
       ROLE: master
       MASTER_HOST: statefun-manager
     volumes:
-      - ./module.yaml:/opt/statefun/modules/benchmark/module.yaml
+      - ./module-dev.yaml:/opt/statefun/modules/benchmark/module.yaml
 
   statefun-worker:
     image: apache/flink-statefun:3.1.0
@@ -37,16 +36,16 @@ services:
     depends_on:
       - statefun-manager
       - kafka
-#      - benchmark-functions
+      - benchmark-stateful-functions
     links:
       - "statefun-manager:statefun-manager"
       - "kafka:kafka"
-#      - "benchmark-functions:benchmark-functions"
+      - "benchmark-stateful-functions:benchmark-stateful-functions"
     environment:
       ROLE: worker
       MASTER_HOST: statefun-manager
     volumes:
-      - ./module.yaml:/opt/statefun/modules/benchmark/module.yaml
+      - ./module-dev.yaml:/opt/statefun/modules/benchmark/module.yaml
 
   ###############################################################
   #    Kafka for ingress and egress
