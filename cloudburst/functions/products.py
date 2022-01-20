@@ -51,7 +51,6 @@ def register_products_functions(cloud):
   def checkout_retract_all_stock(cb, cart_result):
     print("Checkout - Retracting all stock")
     cart = cart_result["cart"]
-    print(cart)
     results = [checkout_retract_stock(cb, product_id, amount) for product_id, amount in cart.items()]
 
     failures = [not r["success"] for r in results]
@@ -75,16 +74,45 @@ def register_products_functions(cloud):
 
   def checkout_rollback_stock(cb, retract_credit_result):
     if not retract_credit_result["rollback_stock"]:
-      return
+      return {
+        "rolled_back": False,
+        "cart": retract_credit_result["cart"]
+      }
 
     print("Checkout - Rollback stock, not enough credit")
     cart = retract_credit_result["cart"]
     _ = [add_product_stock(cb, product_id, amount) for product_id, amount in cart.items()]
 
-    return
+    return {
+      "rolled_back": True
+    }
+
+  def checkout_update_freq_items(cb, product_id, items):
+    product = cb.get(product_id)
+    if product is not None:
+      freq_items = product.get("freq_items") or {}
+
+      for product in items:
+        value = freq_items.get(product) or 0
+        freq_items[product] = value
+
+      product["freq_items"] = freq_items
+
+      cb.put(product_id, product)
+
+  def checkout_update_all_freq_items(cb, rollback_result):
+    if rollback_result["rolled_back"]:
+      return
+
+    cart = rollback_result["cart"]
+
+    for item in cart:
+      checkout_update_freq_items(cb, item, [i for i in cart if i != item])
+
 
   cloud.register(set_product_price, "set_product_price")
   cloud.register(retract_product_stock, "retract_product_stock")
   cloud.register(add_product_stock, "add_product_stock")
   cloud.register(checkout_retract_all_stock, "checkout_retract_all_stock")
   cloud.register(checkout_rollback_stock, "checkout_rollback_stock")
+  cloud.register(checkout_update_all_freq_items, "checkout_update_all_freq_items")

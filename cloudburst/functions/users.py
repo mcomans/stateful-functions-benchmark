@@ -49,7 +49,8 @@ def register_users_functions(cloud):
     print("Checkout - Checkout successful")
 
     return {
-      "rollback_stock": False
+      "rollback_stock": False,
+      "cart": retract_stock_result["cart"]
     }
 
   cloud.register(add_user_credits, "add_user_credits")

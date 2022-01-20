@@ -29,3 +29,7 @@ def patch_product(product_id):
     product = add_product_stock(product_id, product_body["stock"]).get()
   
   return product
+
+@products.get("/<product_id>/freq-items")
+def get_freq_items(product_id):
+  depth = request.args.get()
