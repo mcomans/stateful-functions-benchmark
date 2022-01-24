@@ -28,8 +28,23 @@ def patch_product(product_id):
   if product_body is not None and "stock" in product_body:
     product = add_product_stock(product_id, product_body["stock"]).get()
   
-  return product
+  return product_id
 
 @products.get("/<product_id>/freq-items")
 def get_freq_items(product_id):
-  depth = request.args.get()
+  request_id = uuid4()
+  depth_str = request.args.get("depth")
+  depth = int(depth_str) if depth_str else 3
+
+  cloud.register_dag(str(request_id),
+                     ["get_top_freq_item_" + str(i) for i in range(1, depth+1)],
+                     [("get_top_freq_item_" + str(i), "get_top_freq_item_" + str(i + 1)) for i in range(1, depth)]
+                     )
+
+  cloud.call_dag(str(request_id), {
+    "get_top_freq_item_1": {"found_items": [], "product_id": product_id, "request_id": request_id}
+  }).get()
+
+  cloud.delete_dag(str(request_id))
+
+  cloud

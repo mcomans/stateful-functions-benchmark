@@ -109,6 +109,38 @@ def register_products_functions(cloud):
     for item in cart:
       checkout_update_freq_items(cb, item, [i for i in cart if i != item])
 
+  def get_top_freq_item(cb, query):
+    product_id = query.get("product_id")
+    if not product_id:
+      return query
+
+    product = cb.get(product_id)
+
+    freq_items = product.get("freq_items")
+
+    if not freq_items:
+      return {
+        "product_id": None,
+        "found_items": query.get("found_items")
+      }
+
+    sorted_items = sorted(freq_items.items(), key=lambda item: item[1])
+    found_items = query.get("found_items") or []
+
+    for item in reversed(sorted_items):
+      if item not in found_items:
+        found_items.append(item)
+        return {
+          "product_id": item,
+          "found_items": found_items
+        }
+
+
+    return {
+      "product_id": None,
+      "found_items": query.get("found_items")
+    }
+
 
   cloud.register(set_product_price, "set_product_price")
   cloud.register(retract_product_stock, "retract_product_stock")
@@ -116,3 +148,6 @@ def register_products_functions(cloud):
   cloud.register(checkout_retract_all_stock, "checkout_retract_all_stock")
   cloud.register(checkout_rollback_stock, "checkout_rollback_stock")
   cloud.register(checkout_update_all_freq_items, "checkout_update_all_freq_items")
+
+  for i in range(1, 50):
+    cloud.register(get_top_freq_item, "get_top_freq_item_" + str(i))
