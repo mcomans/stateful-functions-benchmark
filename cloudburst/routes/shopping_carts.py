@@ -13,6 +13,7 @@ def create_shopping_cart():
 
 @carts.route("/<cart_id>/products", methods=["POST"])
 def add_to_cart_route(cart_id):
+  request_id = str(uuid4())
   data = request.json
-  res = add_to_cart(cart_id, data["productId"], data["amount"]).get()
+  res = add_to_cart(cart_id, data["productId"], data["amount"], request_id).get()
   return res
