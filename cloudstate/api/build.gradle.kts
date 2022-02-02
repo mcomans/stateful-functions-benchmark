@@ -35,6 +35,7 @@ dependencies {
     implementation("io.grpc:grpc-protobuf:1.41.0")
     implementation("io.grpc:grpc-stub:1.41.0")
     implementation("com.google.protobuf:protobuf-java-util:3.18.0")
+    implementation("javax.annotation:javax.annotation-api:1.3.2")
     api("org.apache.tomcat:annotations-api:6.0.53")
     protobuf(files("../shared-proto"))
 }

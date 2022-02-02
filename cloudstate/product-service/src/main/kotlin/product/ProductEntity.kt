@@ -137,8 +137,8 @@ class ProductEntity(@EntityId private val entityId: String) {
             "entityId" to entityId,
         ) {
             logger.debug { "Getting top frequent items" }
-            val topItems = frequentItems.toList().sortedBy { it.second }.take(message.top).map { it.first }
-                .filterNot { message.visitedList.contains(it) };
+            val topItems = frequentItems.toList().sortedBy { it.second }.map { it.first }
+                .filterNot { message.visitedList.contains(it) }.take(message.top)
             if (message.depth == 1) {
                 logger.debug { "Depth is reached, returning top frequent items" }
                 return Product.GetFrequentItemsGraphResponse

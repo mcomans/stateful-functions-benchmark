@@ -35,6 +35,7 @@ class UserEntity(@EntityId private val entityId: String) {
             "entityType" to "user",
             "entityId" to entityId,
         ) {
+
             val newCredits = credits - retractCreditsMessage.amount;
             logger.debug {"Retracting ${retractCreditsMessage.amount} credits. New credits: $newCredits"}
             if (newCredits >= 0) {
