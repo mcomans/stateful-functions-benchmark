@@ -134,7 +134,7 @@ class ProductFn : LoggedStatefulFunction() {
             return
         }
 
-        val topProducts = freq.products.toList().sortedBy { it.second }.take(message.top).map { it.first }.filterNot { message.visited.contains(it) }
+        val topProducts = freq.products.toList().sortedBy { it.second }.map { it.first }.filterNot { message.visited.contains(it) }.take(message.top)
 
         if (context.caller().isPresent && message.depth == 1) {
             logger.info { "Product ${context.self().id()} - Depth reached, returning set of freq items" }

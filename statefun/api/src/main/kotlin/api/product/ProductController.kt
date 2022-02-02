@@ -23,19 +23,19 @@ class ProductController(val kafkaTemplate: KafkaTemplate<String, Any>, val reque
 
         handleProductChange(productId, product)
 
-        return productId;
+        return productId
     }
 
     @PatchMapping("/{productId}")
     fun patchProduct(@PathVariable productId: String, @RequestBody product: Product): String {
         handleProductChange(productId, product)
-        return productId;
+        return productId
     }
 
     @GetMapping("/{productId}/freq-items")
-    fun getFrequentlyBoughtTogetherItems(@PathVariable productId: String) {
+    fun getFrequentItems(@PathVariable productId: String, @RequestBody query: FrequentItemsQuery) {
         kafkaTemplate.send("freq-items-query", productId, MessageWrapper(requestInfo.requestId,
-            GetFrequentlyBoughtTogetherGraph(visited = setOf())))
+            GetFrequentlyBoughtTogetherGraph(top = query.top, depth = query.depth, visited = setOf())))
     }
 
     private fun handleProductChange(productId: String, product: Product?) {
@@ -49,4 +49,5 @@ class ProductController(val kafkaTemplate: KafkaTemplate<String, Any>, val reque
     }
 
     data class Product(val price: Int?, val stock: Int?)
+    data class FrequentItemsQuery(val depth: Int = 3, val top: Int = 3)
 }
