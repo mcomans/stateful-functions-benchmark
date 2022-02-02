@@ -2,11 +2,7 @@ import structlog
 import logging
 import orjson
 
-setup = False
-
 def setup_logging():
-  global setup
-  if not setup:
     structlog.configure(
         cache_logger_on_first_use=True,
         wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
@@ -19,4 +15,3 @@ def setup_logging():
         ],
         logger_factory=structlog.BytesLoggerFactory(),
     )
-    setup = True
