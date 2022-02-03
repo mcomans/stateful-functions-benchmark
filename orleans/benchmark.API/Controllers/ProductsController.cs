@@ -53,10 +53,10 @@ namespace benchmark.API.Controllers
         }
 
         [HttpGet("{id:guid}/freq-items")]
-        public async Task<ActionResult<List<string>>> GetFrequentItemsGraph(Guid id)
+        public async Task<ActionResult<List<string>>> GetFrequentItemsGraph(Guid id, [FromBody] FrequentItemsQuery query)
         {
             var products = await _client.GetGrain<IProductGrain>(id)
-                .GetFrequentItemsGraph(new HashSet<IProductGrain>());
+                .GetFrequentItemsGraph(new HashSet<IProductGrain>(), query.Depth, query.Top);
 
             return products.Select(p => p.GetPrimaryKey().ToString()).ToList();
         }
@@ -66,5 +66,11 @@ namespace benchmark.API.Controllers
     {
         public int? Price { get; set; }
         public int? Stock { get; set; }
+    }
+
+    public class FrequentItemsQuery
+    {
+        public int Top { get; set; } = 3;
+        public int Depth { get; set; } = 3;
     }
 }

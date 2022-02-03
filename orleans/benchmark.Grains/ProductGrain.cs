@@ -57,7 +57,10 @@ namespace benchmark.Grains
         public async Task<ISet<IProductGrain>> GetFrequentItemsGraph(ISet<IProductGrain> visited, int depth = 3,
             int top = 3)
         {
-            var topProducts = _productState.State.FrequentItems.OrderBy(p => p.Value).Take(top).Select(p => p.Key)
+            var topProducts = _productState.State.FrequentItems.OrderBy(p => p.Value)
+                .Where(p => !visited.Contains(p.Key))
+                .Take(top)
+                .Select(p => p.Key)
                 .ToList();
 
             if (depth == 1) return topProducts.ToHashSet();
