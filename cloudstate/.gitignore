@@ -295,3 +295,6 @@ gradle-app.setting
 .classpath
 
 # End of https://www.toptal.com/developers/gitignore/api/java,kotlin,intellij+all,gradle,python
+
+!gradle/wrapper/gradle-wrapper.jar
+!gradle-wrapper.jar

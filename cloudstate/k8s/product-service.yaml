@@ -1,0 +1,35 @@
+apiVersion: cloudstate.io/v1alpha1
+kind: StatefulStore
+metadata:
+  name: product-store
+spec:
+  type: InMemory
+---
+apiVersion: cloudstate.io/v1alpha1
+kind: StatefulService
+metadata:
+  name: product-service
+  labels:
+    app: product-service
+spec:
+  datastore:
+    name: product-store
+  containers:
+    - name: product-service
+      image: benchmark-cloudstate-product-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-service
+  namespace: default
+spec:
+  ports:
+  - name: grpc
+    port: 80
+    protocol: TCP
+    targetPort: 8013
+  sessionAffinity: None
+  type: ClusterIP
+  selector:
+    cloudstate.io/statefulService: product-service
