@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Orleans;
+using Orleans.Concurrency;
 
 namespace benchmark.Interfaces
 {
@@ -23,6 +24,7 @@ namespace benchmark.Interfaces
 
         Task UpdateFrequentItems(List<IProductGrain> products);
 
+        [AlwaysInterleave]
         Task<ISet<IProductGrain>> GetFrequentItemsGraph(ISet<IProductGrain> visited, int depth = 3, int top = 3);
     }
 }
