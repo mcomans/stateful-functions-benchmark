@@ -34,20 +34,31 @@ namespace benchmark.API
                     }
                     else
                     {
+                        var storageMethod = Environment.GetEnvironmentVariable("STORAGE_METHOD");
                         var psqlConnectionString = Environment.GetEnvironmentVariable("PSQL_CONNECTION_STRING")!;
+                        
                         siloBuilder
                             .UseKubernetesHosting()
                             .UseAdoNetClustering(options =>
                             {
                                 options.Invariant = "Npgsql";
                                 options.ConnectionString = psqlConnectionString;
-                            })
-                            .AddAdoNetGrainStorage("benchmarkStore", options =>
-                            {
-                                options.Invariant = "Npgsql";
-                                options.ConnectionString = psqlConnectionString;
-                                options.UseJsonFormat = true;
                             });
+                        
+                        switch (storageMethod)
+                        {
+                            case null or "PSQL":
+                                siloBuilder.AddAdoNetGrainStorage("benchmarkStore", options =>
+                                {
+                                    options.Invariant = "Npgsql";
+                                    options.ConnectionString = psqlConnectionString;
+                                    options.UseJsonFormat = true;
+                                });
+                                break;
+                            case "IN_MEMORY":
+                                siloBuilder.AddMemoryGrainStorage("benchmarkStore");
+                                break;
+                        }
                     }
                 })
                 .UseSerilog()
