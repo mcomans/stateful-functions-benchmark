@@ -5,7 +5,7 @@
 ``` sh
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
-helm install postgresql --set postgresqlPassword=benchmark bitnami/postgresql
+helm install postgresql --set auth.postgresPassword=benchmark bitnami/postgresql
 ```
 
 2. Create database schema for Orleans clustering and grain persistence:
