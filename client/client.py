@@ -21,6 +21,7 @@ parser.add_argument("--kafka-host", help="Hostname of the kafka server that cont
 parser.add_argument("--kafka-port", default=9094, type=int, help="Port of the kafka server that contains the cluster logs")
 parser.add_argument("--kafka-topic", default="cluster-logs", help="Kafka topic which contains the cluster logs")
 parser.add_argument("--compress-logs", help="Output captured logs from kafka to a gzip compressed file", action="store_true")
+parser.add_argument("--time", "-t", default="1m", help="Runtime for each locust user, e.g. 1m, 1h, etc.")
 
 args = parser.parse_args()
 
@@ -55,7 +56,7 @@ p = subprocess.run(
   "python -m locust "
   "-f users/checkout_user "
   "--headless "
-  "-t 1m " 
+  f"-t {args.time} "
   f"-u {args.nr_users} -r {args.spawn_rate} "
   f"--host {host} "
   f"--products-file {products_filename} "
@@ -69,7 +70,7 @@ p = subprocess.run(
   "python -m locust "
   "-f users/analytics_user "
   "--headless "
-  "-t 1m "
+  f"-t {args.time} "
   f"-u {args.nr_users} -r {args.spawn_rate} "
   f"--host {host} "
   f"--products-file {products_filename} "
