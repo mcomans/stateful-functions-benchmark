@@ -9,11 +9,13 @@ def save_kafka_logs(filename: str, topic: str, hostname: str, port: str, gzip_ou
   if gzip_output:
     with gzip.open(filename, "wb") as out:
       for message in consumer:
-        out.write(message.value) 
+        out.write(message.value)
+        out.write(b'\n')
   else:
     with open(filename, "wb") as out:
       for message in consumer:
         out.write(message.value)
+        out.write(b'\n')
 
 class SaveKafkaLogsThread(Thread):
   def __init__(self, filename: str, topic: str, hostname: str, port: str, gzip_output: bool, *args, **kwargs):
@@ -37,7 +39,7 @@ class SaveKafkaLogsThread(Thread):
       for tp_records in tps.values():
         for message in tp_records:
           out.write(message.value) 
-
+          out.write(b'\n')
       time.sleep(1)
 
     out.close()

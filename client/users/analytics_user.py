@@ -17,32 +17,28 @@ def _(parser):
   parser.add_argument("--distribution-parameter", type=float)
 
 @events.test_start.add_listener
-def _(environment, **_):
+def _(environment, **_kwargs):
   global products
   products = read_products(environment.parsed_options.products_file)
 
-class CheckoutUser(HttpUser):
+class AnalyticsUser(HttpUser):
   wait_time = between(1, 2)
 
   @task
-  def checkout(self):
+  def get_frequent_items(self):
     if not products:
       print("Products not loaded before test start")
       return
 
-    user_response = self.client.post("/users", json={})
-    user = user_response.text.strip("\"")
-
-    self.client.patch(f"/users/{user}/credits/add", json={"credits": 10000}, name="/users/<id>/credits/add")
-
-    shopping_cart_response = self.client.post("/shopping-carts")
-    shopping_cart = shopping_cart_response.text.strip("\"")
-
-    for i in range(randint(2, 8)):
-      product = get_random_product(products,
+    product = get_random_product(products,
                                    self.environment.parsed_options.products_distribution,
                                    self.environment.parsed_options.distribution_parameter)
-      amount = randint(1, 4)
-      self.client.post(f"/shopping-carts/{shopping_cart}/products", json={"productId": product, "amount": amount}, name="/shopping-carts/<id>/products")
+    
+    # draw a random number from a zipf distribution
 
-    self.client.post("/orders/checkout", json={"cartId": shopping_cart, "userId": user})
+    # TODO: Choose top and depth parameters
+    top = randint(1, 3)
+    depth = randint(3, 5)
+
+
+    self.client.get(f"/products/{product}/freq-items", params={"top": top, "depth": depth}, name="/products/{productId}/freq-items")
