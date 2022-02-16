@@ -1,4 +1,3 @@
-from .logging import setup_logging
 import structlog
 import logging
 import orjson
