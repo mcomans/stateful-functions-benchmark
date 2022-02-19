@@ -5,6 +5,7 @@ namespace benchmark.Interfaces
 {
     public interface IUserGrain : IGrainWithGuidKey
     {
+        [Transaction(TransactionOption.CreateOrJoin)]
         Task AddCredit(int amount);
         
         /// <summary>

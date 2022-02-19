@@ -3,16 +3,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using benchmark.Interfaces;
 using Microsoft.Extensions.Logging;
-using Orleans.Transactions.Abstractions;
+using Orleans.Runtime;
 
 namespace benchmark.Grains
 {
     public class ShoppingCartGrain : TracedGrain, IShoppingCartGrain
     {
-        private readonly ITransactionalState<ShoppingCartState> _shoppingCartState;
+        private readonly IPersistentState<ShoppingCartState> _shoppingCartState;
 
         public ShoppingCartGrain(
-            [TransactionalState("shoppingCart", "benchmarkStore")] ITransactionalState<ShoppingCartState> shoppingCartState,
+            [PersistentState("shoppingCart", "benchmarkStore")] IPersistentState<ShoppingCartState> shoppingCartState,
             ILogger<ShoppingCartGrain> logger) : base(logger)
         {
             _shoppingCartState = shoppingCartState;
@@ -20,27 +20,25 @@ namespace benchmark.Grains
 
         public async Task AddToCart(IProductGrain product, int amount)
         {
-            await _shoppingCartState.PerformUpdate(x =>
-            {
-                if (x.Contents.ContainsKey(product))
-                    x.Contents[product] += amount;
-                else
-                    x.Contents.Add(product, amount);
-            });
+            if (_shoppingCartState.State.Contents.ContainsKey(product))
+                _shoppingCartState.State.Contents[product] += amount;
+            else
+                _shoppingCartState.State.Contents.Add(product, amount);
+
+            await _shoppingCartState.WriteStateAsync();
         }
 
         public async Task RemoveFromCart(IProductGrain product, int amount)
         {
-            await _shoppingCartState.PerformUpdate(x =>
-            {
-                if (x.Contents.ContainsKey(product))
-                    x.Contents[product] -= amount;
-            });
+            if (_shoppingCartState.State.Contents.ContainsKey(product))
+                _shoppingCartState.State.Contents[product] -= amount;
+
+            await _shoppingCartState.WriteStateAsync();
         }
 
         public Task<List<KeyValuePair<IProductGrain, int>>> GetContents()
         {
-            return _shoppingCartState.PerformRead(x => x.Contents.ToList());
+            return Task.FromResult(_shoppingCartState.State.Contents.ToList());
         }
     }
 
