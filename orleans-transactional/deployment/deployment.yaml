@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: benchmark-orleans-transactional
+  labels:
+    orleans/serviceId: benchmark-orleans-transactional
+spec:
+  selector:
+    matchLabels:
+      orleans/serviceId: benchmark-orleans-transactional
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        # This label is used to identify the service to Orleans
+        orleans/serviceId: benchmark-orleans-transactional
+
+        # This label is used to identify an instance of a cluster to Orleans.
+        # Typically, this will be the same value as the previous label, or any 
+        # fixed value.
+        # In cases where you are not using rolling deployments (for example,
+        # blue/green deployments),
+        # this value can allow for distinct clusters which do not communicate
+        # directly with each others,
+        # but which still share the same storage and other resources.
+        orleans/clusterId: benchmark-orleans-transactional
+    spec:
+      containers:
+        - name: main
+          image: benchmark-orleans-transactional
+          # imagePullPolicy: Always
+          imagePullPolicy: Never
+          ports:
+            # Define the ports which Orleans uses
+            - containerPort: 11111
+            - containerPort: 30000
+            - containerPort: 80
+          env:
+            - name: PSQL_CONNECTION_STRING
+              value: "User ID=postgres;Host=postgresql;Password=benchmark;Port=5432;Database=benchmark-orleans;Pooling=true;"
+            # Configure settings to let Orleans know which cluster it belongs to
+            # and which pod it is running in
+            - name: ORLEANS_SERVICE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['orleans/serviceId']
+            - name: ORLEANS_CLUSTER_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['orleans/clusterId']
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: DOTNET_SHUTDOWNTIMEOUTSECONDS
+              value: "120"
+          request:
+          # Set resource requests
+      terminationGracePeriodSeconds: 180
+  minReadySeconds: 60
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
