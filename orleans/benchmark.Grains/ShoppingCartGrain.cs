@@ -3,19 +3,22 @@ using System.Linq;
 using System.Threading.Tasks;
 using benchmark.Interfaces;
 using Microsoft.Extensions.Logging;
+using Orleans;
 using Orleans.Runtime;
 
 namespace benchmark.Grains
 {
-    public class ShoppingCartGrain : TracedGrain, IShoppingCartGrain
+    public class ShoppingCartGrain : Grain, IShoppingCartGrain
     {
         private readonly IPersistentState<ShoppingCartState> _shoppingCartState;
+        private readonly ILogger<ShoppingCartGrain> _logger;
 
         public ShoppingCartGrain(
             [PersistentState("shoppingCart", "benchmarkStore")] IPersistentState<ShoppingCartState> shoppingCartState,
-            ILogger<ShoppingCartGrain> logger) : base(logger)
+            ILogger<ShoppingCartGrain> logger)
         {
             _shoppingCartState = shoppingCartState;
+            _logger = logger;
         }
 
         public async Task AddToCart(IProductGrain product, int amount)
@@ -38,7 +41,9 @@ namespace benchmark.Grains
 
         public Task<List<KeyValuePair<IProductGrain, int>>> GetContents()
         {
-            return Task.FromResult(_shoppingCartState.State.Contents.ToList());
+            var contents = _shoppingCartState.State.Contents.ToList();
+            _logger.Info("{productCount} {traceId}", contents.Count, RequestContext.Get("traceId"));
+            return Task.FromResult(contents);
         }
     }
 

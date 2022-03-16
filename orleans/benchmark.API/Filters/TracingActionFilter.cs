@@ -26,7 +26,7 @@ namespace benchmark.API.Filters
                 ["status"] = "HTTP_EXECUTING",
                 ["path"] = context.HttpContext.Request.Path,
                 ["template"] = context.ActionDescriptor.AttributeRouteInfo?.Template,
-                ["httpMethod"] = context.HttpContext.Request.Method
+                ["httpMethod"] = context.HttpContext.Request.Method,
             }))
             {
                 _logger.Info("Starting HTTP call");

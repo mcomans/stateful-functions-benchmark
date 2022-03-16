@@ -3,12 +3,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using benchmark.Interfaces;
 using Microsoft.Extensions.Logging;
+using Orleans;
 
 namespace benchmark.Grains
 {
-    public class OrderGrain : TracedGrain, IOrderGrain
+    public class OrderGrain : Grain, IOrderGrain
     {
-        public OrderGrain(ILogger<OrderGrain> logger) : base(logger)
+        public OrderGrain(ILogger<OrderGrain> logger)
         {
         }
 
@@ -41,7 +42,7 @@ namespace benchmark.Grains
                 return false;
             }
 
-            await UpdateFrequentItems(products.Select(p => p.Key));
+            UpdateFrequentItems(products.Select(p => p.Key));
 
             return true;
         }

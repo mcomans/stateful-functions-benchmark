@@ -1,16 +1,17 @@
 using System.Threading.Tasks;
 using benchmark.Interfaces;
 using Microsoft.Extensions.Logging;
+using Orleans;
 using Orleans.Runtime;
 
 namespace benchmark.Grains
 {
-    public class UserGrain : TracedGrain, IUserGrain
+    public class UserGrain : Grain, IUserGrain
     {
         private readonly IPersistentState<UserState> _userState;
 
         public UserGrain([PersistentState("user", "benchmarkStore")] IPersistentState<UserState> userState,
-            ILogger<UserGrain> logger) : base(logger)
+            ILogger<UserGrain> logger)
         {
             _userState = userState;
         }

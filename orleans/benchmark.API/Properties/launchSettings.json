@@ -5,7 +5,9 @@
       "commandName": "Project",
       "applicationUrl": "http://localhost:5001",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "STORAGE_METHOD": "PSQL",
+        "PSQL_CONNECTION_STRING": "User ID=postgres;Host=localhost;Password=benchmark;Port=5432;Database=benchmark-orleans;Pooling=true"
       }
     }
   }
