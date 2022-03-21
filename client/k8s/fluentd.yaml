@@ -35,7 +35,7 @@ spec:
           - name: FLUENT_KAFKA2_COMPRESSION_CODEC
             value: "gzip"
           - name: FLUENT_KAFKA2_MAX_SEND_LIMIT_BYTES
-            value: "1000000"
+            value: "10000000"
         volumeMounts:
         - name: varlog
           mountPath: /var/log
@@ -47,6 +47,8 @@ spec:
         # - name: dockercontainerlogdirectory
         #   mountPath: /var/log/pods
         #   readOnly: true
+        - name: fluent-config
+          mountPath: /fluentd/etc/
       terminationGracePeriodSeconds: 30
       volumes:
       - name: varlog
@@ -62,7 +64,7 @@ spec:
       #     path: /var/log/pods
       - name: fluent-config
         configMap:
-          name: fluent
+          name: fluentd-config
           items:
-            - key: fluent_conf
+            - key: fluent.conf
               path: fluent.conf
