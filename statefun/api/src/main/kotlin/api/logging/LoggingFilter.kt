@@ -2,6 +2,7 @@ package api.logging
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import javax.servlet.Filter
@@ -17,9 +18,10 @@ class LoggingFilter(val requestInfo: RequestInfo) : Filter {
 
     override fun doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) {
         if (request is HttpServletRequest) {
+            MDC.put("requestId", requestInfo.requestId)
             logger.info("Request started: ${requestInfo.requestId}")
-
             chain.doFilter(request, response)
+            MDC.remove("requestId")
         }
     }
 }
