@@ -20,6 +20,7 @@ import types.shoppingcart.GetCartResponse
 import types.user.RetractCredit
 import types.user.RetractCreditResponse
 import user.UserFn
+import utils.sendLogged
 import java.util.concurrent.CompletableFuture
 
 private val logger = KotlinLogging.logger {}
@@ -58,7 +59,7 @@ class OrderFn : LoggedStatefulFunction() {
             .build()
 
         logger.info { "Order ${context.self().id()} - Requesting shopping cart contents from ${message.shoppingCartId}" }
-        context.send(getShoppingCartMessage)
+        context.sendLogged(getShoppingCartMessage, logger)
 
         val storage = context.storage()
 
@@ -81,7 +82,7 @@ class OrderFn : LoggedStatefulFunction() {
                 .build()
 
             logger.info { "Order ${context.self().id()} - Sending retract stock message to ${product.productId}" }
-            context.send(retractStockMessage)
+            context.sendLogged(retractStockMessage, logger)
         }
 
         order.status = "CART_RETRIEVED"
@@ -122,7 +123,7 @@ class OrderFn : LoggedStatefulFunction() {
 
                 logger.info { "Order ${context.self().id()} - Retracting total order price ($totalPrice) from user ${order.userId}" }
 
-                context.send(retractCreditMessage)
+                context.sendLogged(retractCreditMessage, logger)
                 order.status = "STOCK_RETRACTED"
             }
         }
@@ -163,7 +164,7 @@ class OrderFn : LoggedStatefulFunction() {
             .build()
 
         logger.info { "Order ${context.self().id()} - Sending add stock message to ${entry.key}" }
-        context.send(addStockMessage)
+        context.sendLogged(addStockMessage, logger)
     }
 
     private fun sendItemsBoughtTogether(productId: String, boughtTogether: List<String>, context: Context, requestId: String) {
@@ -175,7 +176,7 @@ class OrderFn : LoggedStatefulFunction() {
             .build()
 
         logger.info { "Order ${context.self().id()} - Sending update frequently bought items message to ${productId}" }
-        context.send(updateFrequentlyBoughtTogether)
+        context.sendLogged(updateFrequentlyBoughtTogether, logger)
     }
 
     class Order(val userId: String, var status: String, val products: MutableMap<String, OrderProduct>) {

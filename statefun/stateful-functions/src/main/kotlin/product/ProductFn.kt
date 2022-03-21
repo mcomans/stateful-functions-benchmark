@@ -9,6 +9,7 @@ import org.apache.flink.statefun.sdk.java.message.MessageBuilder
 import types.MessageWrapper
 import types.WrappedMessage
 import types.product.*
+import utils.sendLogged
 import java.util.concurrent.CompletableFuture
 
 private val logger = KotlinLogging.logger {}
@@ -92,7 +93,7 @@ class ProductFn : LoggedStatefulFunction() {
                     caller.type().asTypeNameString()
                 }/${caller.id()}"
             }
-            context.send(responseMessage)
+            context.sendLogged(responseMessage, logger)
         }
     }
 
@@ -159,7 +160,7 @@ class ProductFn : LoggedStatefulFunction() {
                     )
                 )
             ).build()
-            context.send(query)
+            context.sendLogged(query, logger)
         }
     }
 
@@ -197,7 +198,7 @@ class ProductFn : LoggedStatefulFunction() {
             BenchmarkMessages.WRAPPER_MESSAGE,
             MessageWrapper(requestId, GetFrequentlyBoughtTogetherGraphResponse(products))
         ).build()
-        context.send(response)
+        context.sendLogged(response, logger)
     }
 
     class Product(var price: Int, var stock: Int) {

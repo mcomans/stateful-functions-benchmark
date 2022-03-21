@@ -14,6 +14,7 @@ import types.WrappedMessage
 import types.user.AddCredit
 import types.user.RetractCredit
 import types.user.RetractCreditResponse
+import utils.sendLogged
 import java.util.concurrent.CompletableFuture
 
 val logger = KotlinLogging.logger {}
@@ -80,7 +81,7 @@ class UserFn : LoggedStatefulFunction() {
                     caller.type().asTypeNameString()
                 }/${caller.id()}"
             }
-            context.send(response)
+            context.sendLogged(response, logger)
         }
     }
 

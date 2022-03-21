@@ -15,6 +15,7 @@ import types.shoppingcart.AddToCart
 import types.shoppingcart.GetCart
 import types.shoppingcart.GetCartResponse
 import types.shoppingcart.RemoveFromCart
+import utils.sendLogged
 import java.util.concurrent.CompletableFuture
 
 private val logger = KotlinLogging.logger {}
@@ -85,7 +86,7 @@ class ShoppingCartFn : LoggedStatefulFunction() {
                 .withCustomType(BenchmarkMessages.WRAPPER_MESSAGE, response).build()
 
             logger.info { "Shopping cart ${context.self().id()} - Sending GetCartResponse to caller with type ${caller.type()} and id ${caller.id()}"}
-            context.send(responseMessage)
+            context.sendLogged(responseMessage, logger)
         }
     }
 
