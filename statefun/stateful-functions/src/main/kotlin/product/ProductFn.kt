@@ -4,7 +4,9 @@ import LoggedStatefulFunction
 import createJsonType
 import messages.BenchmarkMessages
 import mu.KotlinLogging
+import order.OrderFn
 import org.apache.flink.statefun.sdk.java.*
+import org.apache.flink.statefun.sdk.java.io.KafkaEgressMessage
 import org.apache.flink.statefun.sdk.java.message.MessageBuilder
 import types.MessageWrapper
 import types.WrappedMessage
@@ -18,6 +20,7 @@ class ProductFn : LoggedStatefulFunction() {
 
     companion object {
         val TYPE = TypeName.typeNameFromString("benchmark/product")
+        val KAFKA_EGRESS = TypeName.typeNameFromString("benchmark/egress")
         val PRODUCT: ValueSpec<Product> = ValueSpec.named("product").withCustomType(Product.TYPE)
         val FREQUENTLY_BOUGHT_TOGETHER: ValueSpec<FrequentlyBoughtTogether> = ValueSpec
             .named("frequently_bought_together")
@@ -176,16 +179,25 @@ class ProductFn : LoggedStatefulFunction() {
         requestQueryResults.queriedProducts[productId]?.responded = true
         requestQueryResults.queriedProducts[productId]?.results?.addAll(message.products)
 
-        if (requestQueryResults.queriedProducts.all { it.value.responded } && requestQueryResults.callerId != null) {
-            logger.debug {"All products responded"}
-            queryResults.results.remove(requestId)
-            logger.debug {"Sending response to product ${requestQueryResults.callerId}"}
-            sendFreqProductsResponse(
-                requestQueryResults.queriedProducts.values.fold(setOf()) {
-                        acc, productResults -> acc + productResults.results },
-                requestQueryResults.callerId, context, requestId)
-        }
-        else {
+        if (requestQueryResults.queriedProducts.all { it.value.responded }) {
+            if (requestQueryResults.callerId != null) {
+                logger.debug {"All products responded"}
+                queryResults.results.remove(requestId)
+                logger.debug {"Sending response to product ${requestQueryResults.callerId}"}
+                sendFreqProductsResponse(
+                    requestQueryResults.queriedProducts.values.fold(setOf()) { acc, productResults -> acc + productResults.results },
+                    requestQueryResults.callerId, context, requestId)
+            } else {
+                // Send message to egress
+                context.send(
+                    KafkaEgressMessage.forEgress(OrderFn.KAFKA_EGRESS)
+                        .withTopic("egress")
+                        .withUtf8Key(requestId)
+                        .withUtf8Value("DONE")
+                        .build()
+                )
+            }
+        } else {
             queryResults.results[requestId] = requestQueryResults
         }
 

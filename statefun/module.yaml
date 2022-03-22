@@ -1,98 +1,90 @@
-version: "3.0"
-
-module:
-  meta:
-    type: remote
-  spec:
-    endpoints:
-      - endpoint:
-          meta:
-            kind: http
-          spec:
-            functions: benchmark/*
-            urlPathTemplate: http://benchmark-stateful-functions:1108/
-    ingresses:
-      - ingress:
-          meta:
-            type: io.statefun.kafka/ingress
-            id: benchmark/add-to-cart
-          spec:
-            address: kafka.default.svc.cluster.local:9092
-            consumerGroupId: benchmark
-            topics:
-              - topic: add-to-cart
-                valueType: benchmark/MessageWrapper
-                targets:
-                  - benchmark/shopping-cart
-      - ingress:
-          meta:
-            type: io.statefun.kafka/ingress
-            id: benchmark/remove-from-cart
-          spec:
-            address: kafka.default.svc.cluster.local:9092
-            consumerGroupId: benchmark
-            topics:
-              - topic: remove-from-cart
-                valueType: benchmark/MessageWrapper
-                targets:
-                  - benchmark/shopping-cart
-      - ingress:
-          meta:
-            type: io.statefun.kafka/ingress
-            id: benchmark/add-credit
-          spec:
-            address: kafka.default.svc.cluster.local:9092
-            consumerGroupId: benchmark
-            topics:
-              - topic: add-credit
-                valueType: benchmark/MessageWrapper
-                targets:
-                  - benchmark/user
-      - ingress:
-          meta:
-            type: io.statefun.kafka/ingress
-            id: benchmark/add-stock
-          spec:
-            address: kafka.default.svc.cluster.local:9092
-            consumerGroupId: benchmark
-            topics:
-              - topic: add-stock
-                valueType: benchmark/MessageWrapper
-                targets:
-                  - benchmark/product
-      - ingress:
-          meta:
-            type: io.statefun.kafka/ingress
-            id: benchmark/set-price
-          spec:
-            address: kafka.default.svc.cluster.local:9092
-            consumerGroupId: benchmark
-            topics:
-              - topic: set-price
-                valueType: benchmark/MessageWrapper
-                targets:
-                  - benchmark/product
-      - ingress:
-          meta:
-            type: io.statefun.kafka/ingress
-            id: benchmark/checkout
-          spec:
-            address: kafka.default.svc.cluster.local:9092
-            consumerGroupId: benchmark
-            topics:
-              - topic: checkout
-                valueType: benchmark/MessageWrapper
-                targets:
-                  - benchmark/order
-      - ingress:
-          meta:
-            type: io.statefun.kafka/ingress
-            id: benchmark/get-freq-items-query
-          spec:
-            address: kafka.default.svc.cluster.local:9092
-            consumerGroupId: benchmark
-            topics:
-              - topic: freq-items-query
-                valueType: benchmark/MessageWrapper
-                targets:
-                  - benchmark/product
+kind: io.statefun.endpoints.v2/http
+spec:
+  functions: benchmark/*
+  urlPathTemplate: http://benchmark-stateful-functions:1108/
+  transport:
+    type: io.statefun.transports.v1/async
+---
+kind: io.statefun.kafka.v1/ingress
+spec:
+  id: benchmark/add-to-cart
+  address: kafka.default.svc.cluster.local:9092
+  consumerGroupId: benchmark
+  topics:
+  - topic: add-to-cart
+    valueType: benchmark/MessageWrapper
+    targets:
+    - benchmark/shopping-cart
+---
+kind: io.statefun.kafka.v1/ingress
+spec:
+  id: benchmark/remove-from-cart
+  address: kafka.default.svc.cluster.local:9092
+  consumerGroupId: benchmark
+  topics:
+  - topic: remove-from-cart
+    valueType: benchmark/MessageWrapper
+    targets:
+    - benchmark/shopping-cart
+---
+kind: io.statefun.kafka.v1/ingress
+spec:
+  id: benchmark/add-credit
+  address: kafka.default.svc.cluster.local:9092
+  consumerGroupId: benchmark
+  topics:
+  - topic: add-credit
+    valueType: benchmark/MessageWrapper
+    targets:
+    - benchmark/user
+---
+kind: io.statefun.kafka.v1/ingress
+spec:
+  id: benchmark/add-stock
+  address: kafka.default.svc.cluster.local:9092
+  consumerGroupId: benchmark
+  topics:
+  - topic: add-stock
+    valueType: benchmark/MessageWrapper
+    targets:
+    - benchmark/product
+---
+kind: io.statefun.kafka.v1/ingress
+spec:
+  id: benchmark/set-price
+  address: kafka.default.svc.cluster.local:9092
+  consumerGroupId: benchmark
+  topics:
+  - topic: set-price
+    valueType: benchmark/MessageWrapper
+    targets:
+    - benchmark/product
+---
+kind: io.statefun.kafka.v1/ingress
+spec:
+  id: benchmark/checkout
+  address: kafka.default.svc.cluster.local:9092
+  consumerGroupId: benchmark
+  topics:
+  - topic: checkout
+    valueType: benchmark/MessageWrapper
+    targets:
+    - benchmark/order
+---
+kind: io.statefun.kafka.v1/ingress
+spec:
+  id: benchmark/get-freq-items-query
+  address: kafka.default.svc.cluster.local:9092
+  consumerGroupId: benchmark
+  topics:
+  - topic: freq-items-query
+    valueType: benchmark/MessageWrapper
+    targets:
+    - benchmark/product
+---
+kind: io.statefun.kafka.v1/egress
+spec:
+  id: benchmark/egress
+  address: kafka:9092
+  deliverySemantic:
+    type: at-least-once

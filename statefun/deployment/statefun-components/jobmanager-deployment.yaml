@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: master
-          image: apache/flink-statefun:3.1.0
+          image: apache/flink-statefun:3.2.0
           imagePullPolicy: Always
           env:
             - name: ROLE
