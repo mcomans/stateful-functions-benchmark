@@ -19,9 +19,11 @@ class LoggingFilter(val requestInfo: RequestInfo) : Filter {
     override fun doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) {
         if (request is HttpServletRequest) {
             MDC.put("requestId", requestInfo.requestId)
+            MDC.put("status", "HTTP_EXECUTING")
             logger.info("Request started: ${requestInfo.requestId}")
             chain.doFilter(request, response)
             MDC.remove("requestId")
+            MDC.remove("status")
         }
     }
 }
