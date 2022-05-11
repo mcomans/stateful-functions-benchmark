@@ -65,8 +65,8 @@ namespace benchmark.API.Controllers
             {
                 _logger.Info("freq-items");  
             }
-            var products = await _client.GetGrain<IProductGrain>(id)
-                .GetFrequentItemsGraph(new HashSet<IProductGrain>(), depth, top);
+            var product = _client.GetGrain<IProductGrain>(id);
+            var products = await product.GetFrequentItemsGraph(new HashSet<IProductGrain> { product }, depth, top);
 
             return products.Select(p => p.GetPrimaryKey().ToString()).ToList();
         }

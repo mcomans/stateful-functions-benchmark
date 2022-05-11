@@ -26,15 +26,12 @@ namespace benchmark.API.Filters
                 var traceId = RequestContext.Get("traceId");
                 var grainId = grainRef.GetPrimaryKey();
                 var grainInterface = grainRef.InterfaceName;
-                var currentGrain = GrainContext.CurrentGrain.Value;
 
                 using (_logger.BeginScope(new Dictionary<string, object>
                 {
                     ["traceId"] = traceId,
                     ["grainId"] = grainId,
                     ["grainInterface"] = grainInterface,
-                    ["currentGrainId"] = currentGrain?.GetPrimaryKey(),
-                    ["currentGrainType"] = currentGrain?.GetType().Name,
                     ["method"] = context.InterfaceMethod.Name,
                     ["status"] = "OUTGOING_CALL"
                 }))
@@ -49,8 +46,6 @@ namespace benchmark.API.Filters
                     ["traceId"] = traceId,
                     ["grainId"] = grainId,
                     ["grainInterface"] = grainInterface,
-                    ["currentGrainId"] = currentGrain?.GetPrimaryKey(),
-                    ["currentGrainType"] = currentGrain?.GetType().Name,
                     ["method"] = context.InterfaceMethod.Name,
                     ["status"] = "OUTGOING_CALL_RETURNED"
                 }))

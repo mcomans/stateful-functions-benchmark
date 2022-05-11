@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using benchmark.Grains;
@@ -26,7 +27,6 @@ namespace benchmark.API.Filters
                 var traceId = RequestContext.Get("traceId");
                 var grainId = context.Grain.GetPrimaryKey();
                 var grainType = context.Grain.GetType().Name;
-                GrainContext.CurrentGrain.Value = context.Grain;
 
                 using (_logger.BeginScope(new Dictionary<string, object>
                 {
