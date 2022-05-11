@@ -3,19 +3,21 @@ using System.Linq;
 using System.Threading.Tasks;
 using benchmark.Interfaces;
 using Microsoft.Extensions.Logging;
+using Orleans;
 
 namespace benchmark.Grains
 {
-    public class OrderGrain : TracedGrain, IOrderGrain
+    public class OrderGrain : Grain, IOrderGrain
     {
-        public OrderGrain(ILogger<OrderGrain> logger) : base(logger)
+        public OrderGrain(ILogger<OrderGrain> logger) 
         {
         }
 
         public async Task<bool> Checkout(IShoppingCartGrain shoppingCart, IUserGrain user)
         {
             var products = await shoppingCart.GetContents();
-            var retractStockResults = await Task.WhenAll(products.Select(async product =>
+            var retractStockResults = await Task.WhenAll(
+                products.OrderBy(p => p.Key.GetPrimaryKey().ToString()).Select(async product =>
             {
                 var (success, price) = await product.Key.DecreaseStock(product.Value);
                 return (success, productTotal: price * product.Value, product: product.Key, amount: product.Value);
@@ -41,7 +43,7 @@ namespace benchmark.Grains
                 return false;
             }
 
-            await UpdateFrequentItems(products.Select(p => p.Key));
+            // UpdateFrequentItems(products.Select(p => p.Key));
 
             return true;
         }

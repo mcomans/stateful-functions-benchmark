@@ -3,16 +3,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using benchmark.Interfaces;
 using Microsoft.Extensions.Logging;
+using Orleans;
+using Orleans.Concurrency;
 using Orleans.Transactions.Abstractions;
 
 namespace benchmark.Grains
 {
-    public class ProductGrain : TracedGrain, IProductGrain
+    [Reentrant]
+    public class ProductGrain : Grain, IProductGrain
     {
         private readonly ITransactionalState<ProductState> _productState;
 
         public ProductGrain([TransactionalState("product", "benchmarkStore")] ITransactionalState<ProductState> productState,
-            ILogger<ProductGrain> logger) : base(logger)
+            ILogger<ProductGrain> logger)
         {
             _productState = productState;
         }

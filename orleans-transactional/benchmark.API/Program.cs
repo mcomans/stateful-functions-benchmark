@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using benchmark.API.Filters;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Orleans.Configuration;
@@ -26,6 +27,8 @@ namespace benchmark.API
             return Host.CreateDefaultBuilder(args)
                 .UseOrleans((ctx, siloBuilder) =>
                 {
+                    siloBuilder.AddIncomingGrainCallFilter<IncomingGrainCallLoggingFilter>();
+                    siloBuilder.AddOutgoingGrainCallFilter<OutgoingGrainCallLoggingFilter>();
                     if (ctx.HostingEnvironment.IsDevelopment())
                     {
                         siloBuilder

@@ -6,6 +6,7 @@ using benchmark.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Orleans;
+using Orleans.Runtime;
 
 namespace benchmark.API.Controllers
 {
@@ -55,8 +56,18 @@ namespace benchmark.API.Controllers
         [HttpGet("{id:guid}/freq-items")]
         public async Task<ActionResult<List<string>>> GetFrequentItemsGraph(Guid id, int top = 3, int depth = 3)
         {
-            var products = await _client.GetGrain<IProductGrain>(id)
-                .GetFrequentItemsGraph(new HashSet<IProductGrain>(), depth, top);
+            using(_logger.BeginScope( new Dictionary<string, object>
+                  {
+                      ["top"] = top,
+                      ["depth"] = depth,
+                      ["traceId"] = RequestContext.Get("traceId")
+                  }))
+            {
+                _logger.Info("freq-items");  
+            }
+            
+            var product = _client.GetGrain<IProductGrain>(id);
+            var products = await product.GetFrequentItemsGraph(new HashSet<IProductGrain> { product }, depth, top);
 
             return products.Select(p => p.GetPrimaryKey().ToString()).ToList();
         }

@@ -4,6 +4,7 @@ using benchmark.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Orleans;
+using Orleans.Transactions;
 
 namespace benchmark.API.Controllers
 {
@@ -28,9 +29,21 @@ namespace benchmark.API.Controllers
             var shoppingCart = _client.GetGrain<IShoppingCartGrain>(order.CartId);
             var user = _client.GetGrain<IUserGrain>(order.UserId);
 
-            var success = await grain.Checkout(shoppingCart, user);
+            try
+            {
+                var success = await grain.Checkout(shoppingCart, user);
+                return success ? Ok() : BadRequest("Checkout failed");
+            }
+            catch (Exception e) when (e is OrleansBrokenTransactionLockException or OrleansCascadingAbortException or OrleansTransactionPrepareTimeoutException)
+            {
+                return BadRequest($"{e.GetType()}, {e.Message}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"--------- {e.GetType()}, {e.Message}");
+                return Problem($"{e.GetType()}, {e.Message}");
+            }
 
-            return success ? Ok() : Problem("Checkout failed");
         }
     }
 

@@ -3,17 +3,20 @@ using System.Linq;
 using System.Threading.Tasks;
 using benchmark.Interfaces;
 using Microsoft.Extensions.Logging;
+using Orleans;
+using Orleans.Concurrency;
 using Orleans.Runtime;
 
 namespace benchmark.Grains
 {
-    public class ShoppingCartGrain : TracedGrain, IShoppingCartGrain
+    [Reentrant]
+    public class ShoppingCartGrain : Grain, IShoppingCartGrain
     {
         private readonly IPersistentState<ShoppingCartState> _shoppingCartState;
 
         public ShoppingCartGrain(
             [PersistentState("shoppingCart", "benchmarkStore")] IPersistentState<ShoppingCartState> shoppingCartState,
-            ILogger<ShoppingCartGrain> logger) : base(logger)
+            ILogger<ShoppingCartGrain> logger) 
         {
             _shoppingCartState = shoppingCartState;
         }

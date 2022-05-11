@@ -1,17 +1,20 @@
 using System.Threading.Tasks;
 using benchmark.Interfaces;
 using Microsoft.Extensions.Logging;
+using Orleans;
+using Orleans.Concurrency;
 using Orleans.Runtime;
 using Orleans.Transactions.Abstractions;
 
 namespace benchmark.Grains
 {
-    public class UserGrain : TracedGrain, IUserGrain
+    [Reentrant]
+    public class UserGrain : Grain, IUserGrain
     {
         private readonly ITransactionalState<UserState> _userState;
 
         public UserGrain([TransactionalState("user", "benchmarkStore")] ITransactionalState<UserState> userState,
-            ILogger<UserGrain> logger) : base(logger)
+            ILogger<UserGrain> logger)
         {
             _userState = userState;
         }

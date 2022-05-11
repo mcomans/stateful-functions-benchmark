@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using Orleans.Runtime;
+using Orleans.Transactions;
 
 namespace benchmark.API.Filters
 {
-    public class TracingActionFilter : IActionFilter
+    public class TracingActionFilter : IActionFilter, IResultFilter
     {
         private readonly ILogger<TracingActionFilter> _logger;
 
@@ -21,13 +22,13 @@ namespace benchmark.API.Filters
             RequestContext.Set("traceId", traceId);
 
             using (_logger.BeginScope(new Dictionary<string, object>
-            {
-                ["traceId"] = traceId,
-                ["status"] = "HTTP_EXECUTING",
-                ["path"] = context.HttpContext.Request.Path,
-                ["template"] = context.ActionDescriptor.AttributeRouteInfo?.Template,
-                ["httpMethod"] = context.HttpContext.Request.Method
-            }))
+                   {
+                       ["traceId"] = traceId,
+                       ["status"] = "HTTP_EXECUTING",
+                       ["path"] = context.HttpContext.Request.Path,
+                       ["template"] = context.ActionDescriptor.AttributeRouteInfo?.Template,
+                       ["httpMethod"] = context.HttpContext.Request.Method
+                   }))
             {
                 _logger.Info("Starting HTTP call");
             }
@@ -35,11 +36,21 @@ namespace benchmark.API.Filters
 
         public void OnActionExecuted(ActionExecutedContext context)
         {
+        }
+
+        public void OnResultExecuting(ResultExecutingContext context)
+        {
+        }
+
+        public void OnResultExecuted(ResultExecutedContext context)
+        {
             var traceId = RequestContext.Get("traceId");
+            RequestContext.Clear();
             using (_logger.BeginScope(new Dictionary<string, object>
             {
                 ["traceId"] = traceId,
                 ["status"] = "HTTP_EXECUTED",
+                ["statusCode"] = context.HttpContext.Response.StatusCode,
                 ["path"] = context.HttpContext.Request.Path,
                 ["template"] = context.ActionDescriptor.AttributeRouteInfo?.Template,
                 ["httpMethod"] = context.HttpContext.Request.Method

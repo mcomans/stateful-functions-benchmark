@@ -5,6 +5,7 @@ using benchmark.Grains;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Runtime;
+using Orleans.Transactions;
 
 namespace benchmark.API.Filters
 {
@@ -27,15 +28,18 @@ namespace benchmark.API.Filters
                 var traceId = RequestContext.Get("traceId");
                 var grainId = context.Grain.GetPrimaryKey();
                 var grainType = context.Grain.GetType().Name;
+                var transactionId = TransactionContext.GetTransactionInfo()?.Id;
+                GrainContext.CurrentGrain.Value = context.Grain;
 
                 using (_logger.BeginScope(new Dictionary<string, object>
-                {
-                    ["traceId"] = traceId,
-                    ["grainId"] = grainId,
-                    ["grainType"] = grainType,
-                    ["method"] = context.ImplementationMethod.Name,
-                    ["status"] = "INCOMING_CALL"
-                }))
+                       {
+                           ["traceId"] = traceId,
+                           ["grainId"] = grainId,
+                           ["grainType"] = grainType,
+                           ["method"] = context.ImplementationMethod.Name,
+                           ["status"] = "INCOMING_CALL",
+                           ["transactionId"] = transactionId
+                       }))
                 {
                     _logger.Info("Starting execution");
                 }
@@ -48,7 +52,8 @@ namespace benchmark.API.Filters
                     ["grainId"] = grainId,
                     ["grainType"] = grainType,
                     ["method"] = context.ImplementationMethod.Name,
-                    ["status"] = "RETURNING_CALL"
+                    ["status"] = "RETURNING_CALL",
+                    ["transactionId"] = transactionId
                 }))
                 {
                     _logger.Info("Execution complete");
