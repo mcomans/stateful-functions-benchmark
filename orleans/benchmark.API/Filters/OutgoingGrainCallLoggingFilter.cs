@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using benchmark.Interfaces;
@@ -27,6 +28,8 @@ namespace benchmark.API.Filters
                 var grainId = grainRef.GetPrimaryKey();
                 var grainInterface = grainRef.InterfaceName;
                 var currentGrain = GrainContext.CurrentGrain.Value;
+                var callId = Guid.NewGuid();
+                RequestContext.Set("callId", callId);
 
                 using (_logger.BeginScope(new Dictionary<string, object>
                 {
@@ -36,7 +39,8 @@ namespace benchmark.API.Filters
                     ["currentGrainId"] = currentGrain?.GetPrimaryKey(),
                     ["currentGrainType"] = currentGrain?.GetType().Name,
                     ["method"] = context.InterfaceMethod.Name,
-                    ["status"] = "OUTGOING_CALL"
+                    ["status"] = "OUTGOING_CALL",
+                    ["callId"] = callId
                 }))
                 {
                     _logger.Info("Starting execution");
@@ -52,7 +56,8 @@ namespace benchmark.API.Filters
                     ["currentGrainId"] = currentGrain?.GetPrimaryKey(),
                     ["currentGrainType"] = currentGrain?.GetType().Name,
                     ["method"] = context.InterfaceMethod.Name,
-                    ["status"] = "OUTGOING_CALL_RETURNED"
+                    ["status"] = "OUTGOING_CALL_RETURNED",
+                    ["callId"] = callId
                 }))
                 {
                     _logger.Info("Execution complete");

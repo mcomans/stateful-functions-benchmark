@@ -27,6 +27,7 @@ namespace benchmark.API.Filters
                 var grainId = context.Grain.GetPrimaryKey();
                 var grainType = context.Grain.GetType().Name;
                 GrainContext.CurrentGrain.Value = context.Grain;
+                var callId = RequestContext.Get("callId");
 
                 using (_logger.BeginScope(new Dictionary<string, object>
                 {
@@ -34,7 +35,8 @@ namespace benchmark.API.Filters
                     ["grainId"] = grainId,
                     ["grainType"] = grainType,
                     ["method"] = context.ImplementationMethod.Name,
-                    ["status"] = "INCOMING_CALL"
+                    ["status"] = "INCOMING_CALL",
+                    ["callId"] = callId
                 }))
                 {
                     _logger.Info("Starting execution");
@@ -48,7 +50,8 @@ namespace benchmark.API.Filters
                     ["grainId"] = grainId,
                     ["grainType"] = grainType,
                     ["method"] = context.ImplementationMethod.Name,
-                    ["status"] = "RETURNING_CALL"
+                    ["status"] = "RETURNING_CALL",
+                    ["callId"] = callId
                 }))
                 {
                     _logger.Info("Execution complete");
