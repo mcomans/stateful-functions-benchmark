@@ -30,7 +30,7 @@ def checkout_benchmark(args, file_prefix):
   host = f"http://{args.host}:{args.port}"
   spawn_workers_and_master(
     "users/checkout_user",
-    f"--csv={file_prefix}_checkout_locust ",
+    f"{file_prefix}_locust",
     host,
     products_filename,
     args
@@ -45,7 +45,7 @@ def analytics_benchmark(args, file_prefix):
   host = f"http://{args.host}:{args.port}"
   spawn_workers_and_master(
     "users/analytics_user",
-    f"--csv={file_prefix}_analytics_locust ",
+    f"{file_prefix}_locust",
     host,
     products_out_filename,
     args
@@ -54,28 +54,26 @@ def analytics_benchmark(args, file_prefix):
 def spawn_workers_and_master(locustfile, csv_out, host, products_file, args):
   for i in range(args.workers):
     print(f"Spawning locust worker {i + 1}")
-    subprocess.Popen(
-      "python -m locust "
-      f"-f {locustfile} "
-      "--headless "
-      f"--host {host} "
-      f"--products-file {products_file} "
-      f"--products-distribution {args.dist} "
-      "--worker",
-      shell=True)
+    subprocess.Popen([
+      "python", "-m", "locust",
+      "-f", locustfile,
+      "--host", host,
+      "--products-file", products_file,
+      "--products-distribution", args.dist,
+      "--worker"])
 
-  subprocess.run(
-    "python -m locust "
-    f"-f {locustfile} "
-    "--headless "
-    f"--csv={csv_out} "
-    f"-t {args.time} "
-    f"-u {args.nr_users} -r {args.spawn_rate} "
-    f"--host {host} "
-    f"--products-file {products_file} "
-    f"--products-distribution {args.dist} "
-    "--master ",
-    shell=True)
+  subprocess.run([
+    "python", "-m", "locust",
+    "-f", locustfile,
+    "--headless",
+    f"--csv={csv_out}",
+    "-t", args.time,
+    "-u", str(args.nr_users),
+    "-r", str(args.spawn_rate),
+    "--host", host,
+    "--products-file", products_file,
+    "--products-distribution", args.dist,
+    "--master"])
 
 parser = argparse.ArgumentParser(description="Benchmark client", formatter_class=lambda prog: argparse.HelpFormatter(prog,max_help_position=40))
 
@@ -83,7 +81,6 @@ sub_parsers = parser.add_subparsers(title="benchmarks", description="benchmark t
 
 parent_parser = argparse.ArgumentParser(add_help=False)
 parent_parser.add_argument("--dist", default="zipf", choices=["zipf", "uniform"], help="product frequency distribution")
-parent_parser.add_argument("--dist-parameter")
 parent_parser.add_argument("--host", dest="host", default="localhost", help="hostname of the system ingress")
 parent_parser.add_argument("--port", dest="port", default=80, type=int, help="port on which the system is running")
 parent_parser.add_argument("--users", dest="nr_users", default=100, type=int, help="amount of users simulated by locust")
