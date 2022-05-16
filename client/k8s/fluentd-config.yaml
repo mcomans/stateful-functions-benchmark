@@ -16,9 +16,9 @@ data:
       pos_file /var/log/containers.log.pos
       tag kubernetes.*
       read_from_head true
+      exclude_path ["/var/log/containers/fluent*"]
       <parse>
-        @type json
-        time_format %Y-%m-%dT%H:%M:%S.%NZ
+        @type cri
       </parse>
     </source>
     # we use kubernetes metadata plugin to add metadatas to the log
@@ -33,7 +33,8 @@ data:
       @type null
     </match>
 
-    <match **>
+    # <match **>
+    <match kubernetes.var.log.containers.**benchmark**.log>
       @type kafka2
       @id out_kafka2
 
@@ -57,4 +58,8 @@ data:
       <buffer topic>
         flush_interval 5s
       </buffer>
+    </match>
+
+    <match **>
+      @type null
     </match>
