@@ -1,12 +1,6 @@
 from locust import HttpUser, task, between, events
 from random import randint
-from utils import get_random_product
-
-def read_products(filename):
-  products = []
-  with open(filename, "r") as f:
-    products = [r.rstrip() for r in f.readlines()]
-  return products
+from utils import get_random_product, read_products
 
 products = None
 
