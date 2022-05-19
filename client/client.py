@@ -68,6 +68,9 @@ def spawn_workers_and_master(locustfile, csv_out, host, products_file, args):
     "-t", args.time,
     "-u", str(args.nr_users),
     "-r", str(args.spawn_rate),
+    "--step-load" if args.step_load else "",
+    "--step-users", str(args.step_users),
+    "--step-time", str(args.step_time),
     "--host", host,
     "--products-file", products_file,
     "--products-distribution", args.dist,
@@ -81,8 +84,11 @@ parent_parser = argparse.ArgumentParser(add_help=False)
 parent_parser.add_argument("--dist", default="zipf", choices=["zipf", "uniform"], help="product frequency distribution")
 parent_parser.add_argument("--host", dest="host", default="localhost", help="hostname of the system ingress")
 parent_parser.add_argument("--port", dest="port", default=80, type=int, help="port on which the system is running")
-parent_parser.add_argument("--users", dest="nr_users", default=100, type=int, help="amount of users simulated by locust")
+parent_parser.add_argument("--users", dest="nr_users", default=100, type=int, help="max amount of users simulated by locust")
 parent_parser.add_argument("--spawn-rate", dest="spawn_rate", default=10, type=int, help="locust user spawn rate")
+parent_parser.add_argument("--step-load", action="store_true", help="spawn locust users in steps instead of gradually")
+parent_parser.add_argument("--step-users", default=20, type=int, help="locust users spawned per step, if --step-load is chosen")
+parent_parser.add_argument("--step-time", default=100, type=int, help="time per step, if --step-load is chosen")
 parent_parser.add_argument("--kafka-host", help="Hostname of the kafka server that contains the cluster logs")
 parent_parser.add_argument("--kafka-port", default=9094, type=int, help="Port of the kafka server that contains the cluster logs")
 parent_parser.add_argument("--kafka-topic", default="cluster-logs", help="Kafka topic which contains the cluster logs")
