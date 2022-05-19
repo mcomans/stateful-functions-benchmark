@@ -8,8 +8,6 @@ import time
 import shutil
 
 import requests
-from log_collection import SaveKafkaLogsThread
-
 
 def checkout_benchmark(args, file_prefix):
   # Generate products
@@ -107,18 +105,23 @@ out_folder = f"out/{timestamp}-{args.benchmark}"
 os.makedirs(out_folder, exist_ok=True)
 file_prefix = f"{out_folder}/{timestamp}-{args.benchmark}"
 
-thread = None
+log_collection_process = None
 
 # If kafka info provided, start thread which saves the logs from kafka
 if args.kafka_host:
   print("Saving logs collected from kafka")
-  thread = SaveKafkaLogsThread(filename=f"{file_prefix}-logs.txt{'.gz' if args.compress_logs else ''}", hostname=args.kafka_host, port=args.kafka_port, topic=args.kafka_topic, gzip_output=args.compress_logs)
-  thread.start()
+  log_collection_process = subprocess.Popen(["python", "log_collector.py",
+                    "--host", args.kafka_host,
+                    "--port", str(args.kafka_port),
+                    "--topic", args.kafka_topic,
+                    "--compress" if args.compress_logs else "",
+                    "--out", f"{file_prefix}-logs.txt{'.gz' if args.compress_logs else ''}"])
 
+start = datetime.now()
 args.func(args, file_prefix)
+end = datetime.now()
 
-if thread:
+if log_collection_process:
   print("Collecting remaining logs (1 minute)")
   time.sleep(60)
-  thread.terminate()
-  thread.join()
+  log_collection_process.kill()
