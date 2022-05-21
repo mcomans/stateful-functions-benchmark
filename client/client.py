@@ -1,3 +1,5 @@
+from google_cloud_monitoring import download_resource_data
+
 import argparse
 import sys
 import os
@@ -55,6 +57,12 @@ def spawn_workers_and_master(locustfile, csv_out, host, products_file, args):
     subprocess.Popen([
       "python", "-m", "locust",
       "-f", locustfile,
+      "--load-run-time", args.time,
+      "--load-max-users", str(args.nr_users),
+      "--load-spawn-rate", str(args.spawn_rate),
+      "--step-load-users" if args.step_load else "",
+      "--step-user-count", str(args.step_users),
+      "--step-duration", str(args.step_time),
       "--host", host,
       "--products-file", products_file,
       "--products-distribution", args.dist,
@@ -65,12 +73,12 @@ def spawn_workers_and_master(locustfile, csv_out, host, products_file, args):
     "-f", locustfile,
     "--headless",
     f"--csv={csv_out}",
-    "-t", args.time,
-    "-u", str(args.nr_users),
-    "-r", str(args.spawn_rate),
-    "--step-load" if args.step_load else "",
-    "--step-users", str(args.step_users),
-    "--step-time", str(args.step_time),
+    "--load-run-time", args.time,
+    "--load-max-users", str(args.nr_users),
+    "--load-spawn-rate", str(args.spawn_rate),
+    "--step-load-users" if args.step_load else "",
+    "--step-user-count", str(args.step_users),
+    "--step-duration", str(args.step_time),
     "--host", host,
     "--products-file", products_file,
     "--products-distribution", args.dist,
@@ -95,6 +103,7 @@ parent_parser.add_argument("--kafka-topic", default="cluster-logs", help="Kafka 
 parent_parser.add_argument("--compress-logs", help="Output captured logs from kafka to a gzip compressed file", action="store_true")
 parent_parser.add_argument("--time", "-t", default="1m", help="Runtime for each locust user, e.g. 1m, 1h, etc.")
 parent_parser.add_argument("--workers", "-w", default=1, type=int, help="Number of locust workers to spawn, one for each available CPU core is advised")
+parent_parser.add_argument("--gcloud-project", help="google cloud project_id. If supplied resource data will be downloaded")
 
 checkout_parser = sub_parsers.add_parser("checkout", help="run checkout benchmark", parents=[parent_parser])
 checkout_parser.add_argument("--products", dest="nr_products", default=100, type=int, help="number of products to generate")
@@ -126,6 +135,9 @@ if args.kafka_host:
 start = datetime.now()
 args.func(args, file_prefix)
 end = datetime.now()
+
+if args.gcloud_project:
+  download_resource_data(start, end, args.gcloud_project, file_prefix)
 
 if log_collection_process:
   print("Collecting remaining logs (1 minute)")

@@ -24,3 +24,8 @@ def __random_generator(max: int, dist: str, param: float) -> Callable[[], int]:
     return lambda: np.random.zipf(param or 1.25)
   else:
     return lambda: np.random.zipf(param or 1.25)
+
+__seconds_per_unit = {"s": 1, "m": 60, "h": 3600, "d": 86400, "w": 604800}
+
+def convert_to_seconds(s):
+    return int(s[:-1]) * __seconds_per_unit[s[-1]]
