@@ -11,6 +11,10 @@ env:
   FUNCTIONS_IMAGE_NAME: benchmark-statefun-functions
   API_IMAGE_NAME: benchmark-statefun-api
 
+defaults:
+  run:
+    working-directory: statefun
+
 jobs:
   build-push-stateful-functions-image:
     runs-on: ubuntu-latest
