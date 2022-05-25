@@ -24,19 +24,19 @@ data:
     restart-strategy.fixed-delay.delay: 1sec
     jobmanager.memory.process.size: 1g
     taskmanager.memory.process.size: 1g
-    parallelism.default: 2
+    parallelism.default: 1
   log4j-console.properties: |+
-    rootLogger.level = ALL
+    rootLogger.level = ERROR
     rootLogger.appenderRef.console.ref = ConsoleAppender
     rootLogger.appenderRef.rolling.ref = RollingFileAppender
     logger.akka.name = akka
-    logger.akka.level = ALL
+    logger.akka.level = ERROR
     logger.kafka.name= org.apache.kafka
-    logger.kafka.level = ALL
+    logger.kafka.level = ERROR
     logger.hadoop.name = org.apache.hadoop
-    logger.hadoop.level = ALL
+    logger.hadoop.level = ERROR
     logger.zookeeper.name = org.apache.zookeeper
-    logger.zookeeper.level = ALL
+    logger.zookeeper.level = ERROR
     appender.console.name = ConsoleAppender
     appender.console.type = CONSOLE
     appender.console.layout.type = PatternLayout

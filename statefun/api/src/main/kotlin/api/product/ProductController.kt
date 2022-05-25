@@ -1,8 +1,10 @@
 package api.product
 
 import api.logging.RequestInfo
+import api.logging.sendLogged
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.web.bind.annotation.*
 import types.MessageWrapper
@@ -34,16 +36,16 @@ class ProductController(val kafkaTemplate: KafkaTemplate<String, Any>, val reque
 
     @GetMapping("/{productId}/freq-items")
     fun getFrequentItems(@PathVariable productId: String, @RequestBody query: FrequentItemsQuery) {
-        kafkaTemplate.send("freq-items-query", productId, MessageWrapper(requestInfo.requestId,
-            GetFrequentlyBoughtTogetherGraph(top = query.top, depth = query.depth, visited = setOf())))
+        kafkaTemplate.sendLogged("freq-items-query", productId, MessageWrapper(requestInfo.requestId,
+            GetFrequentlyBoughtTogetherGraph(top = query.top, depth = query.depth, visited = setOf())), logger)
     }
 
     private fun handleProductChange(productId: String, product: Product?) {
         if (product?.price != null) {
-            kafkaTemplate.send("set-price", productId, MessageWrapper(requestInfo.requestId, SetPrice(product.price)))
+            kafkaTemplate.sendLogged("set-price", productId, MessageWrapper(requestInfo.requestId, SetPrice(product.price)), logger)
         }
         if (product?.stock != null) {
-            kafkaTemplate.send("add-stock", productId, MessageWrapper(requestInfo.requestId, AddStock(product.stock)))
+            kafkaTemplate.sendLogged("add-stock", productId, MessageWrapper(requestInfo.requestId, AddStock(product.stock)), logger)
         }
 
     }

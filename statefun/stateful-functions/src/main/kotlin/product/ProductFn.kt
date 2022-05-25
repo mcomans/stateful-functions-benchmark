@@ -4,9 +4,7 @@ import LoggedStatefulFunction
 import createJsonType
 import messages.BenchmarkMessages
 import mu.KotlinLogging
-import order.OrderFn
 import org.apache.flink.statefun.sdk.java.*
-import org.apache.flink.statefun.sdk.java.io.KafkaEgressMessage
 import org.apache.flink.statefun.sdk.java.message.MessageBuilder
 import types.MessageWrapper
 import types.WrappedMessage
@@ -20,7 +18,6 @@ class ProductFn : LoggedStatefulFunction() {
 
     companion object {
         val TYPE = TypeName.typeNameFromString("benchmark/product")
-        val KAFKA_EGRESS = TypeName.typeNameFromString("benchmark/egress")
         val PRODUCT: ValueSpec<Product> = ValueSpec.named("product").withCustomType(Product.TYPE)
         val FREQUENTLY_BOUGHT_TOGETHER: ValueSpec<FrequentlyBoughtTogether> = ValueSpec
             .named("frequently_bought_together")
@@ -37,9 +34,9 @@ class ProductFn : LoggedStatefulFunction() {
 
     override fun invoke(context: Context, requestId: String, message: WrappedMessage): CompletableFuture<Void> {
         when(message) {
-            is AddStock -> handleAddStock(context, message)
+            is AddStock -> handleAddStock(context, requestId, message)
             is RetractStock -> handleRetractStock(context, requestId, message)
-            is SetPrice -> handleSetPrice(context, message)
+            is SetPrice -> handleSetPrice(context, requestId, message)
             is UpdateFrequentlyBoughtTogether -> handleUpdateFrequentlyBoughtTogether(context, message)
             is GetFrequentlyBoughtTogetherGraph -> handleGetFrequentlyBoughtTogether(context, requestId, message)
             is GetFrequentlyBoughtTogetherGraphResponse -> handleGetFrequentlyBoughtTogetherResponse(context, requestId, message)
@@ -48,7 +45,7 @@ class ProductFn : LoggedStatefulFunction() {
         return context.done()
     }
 
-    private fun handleAddStock(context: Context, message: AddStock) {
+    private fun handleAddStock(context: Context, requestId: String, message: AddStock) {
         logger.info { "Product ${context.self().id()} - Adding ${message.amount} of stock"}
 
         val storage = context.storage()
@@ -58,6 +55,8 @@ class ProductFn : LoggedStatefulFunction() {
         storage.set(PRODUCT, product)
 
         logger.info { "Product ${context.self().id()} - New amount of stock: ${product.stock}" }
+
+        sendEgressDone(context, requestId)
     }
 
     private fun handleRetractStock(context: Context, requestId: String, message: RetractStock) {
@@ -100,7 +99,7 @@ class ProductFn : LoggedStatefulFunction() {
         }
     }
 
-    private fun handleSetPrice(context: Context, message: SetPrice) {
+    private fun handleSetPrice(context: Context, requestId: String, message: SetPrice) {
         val storage = context.storage()
         val product = storage.get(PRODUCT).orElse(Product(0, 0))
         product.price = message.price
@@ -108,6 +107,7 @@ class ProductFn : LoggedStatefulFunction() {
 
         logger.info { "Product ${context.self().id()} - Price set to: ${message.price}" }
 
+        sendEgressDone(context, requestId)
     }
 
     private fun handleUpdateFrequentlyBoughtTogether(context: Context, message: UpdateFrequentlyBoughtTogether) {
@@ -188,19 +188,12 @@ class ProductFn : LoggedStatefulFunction() {
                     requestQueryResults.queriedProducts.values.fold(setOf()) { acc, productResults -> acc + productResults.results },
                     requestQueryResults.callerId, context, requestId)
             } else {
-                // Send message to egress
-                context.send(
-                    KafkaEgressMessage.forEgress(OrderFn.KAFKA_EGRESS)
-                        .withTopic("egress")
-                        .withUtf8Key(requestId)
-                        .withUtf8Value("DONE")
-                        .build()
-                )
+                queryResults.results[requestId] = requestQueryResults
+                sendEgressDone(context, requestId)
             }
         } else {
             queryResults.results[requestId] = requestQueryResults
         }
-
 
         storage.set(QUERY_RESULTS, queryResults)
     }

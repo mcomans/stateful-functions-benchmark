@@ -10,7 +10,6 @@
                 <mdc/>
                 <message />
                 <logLevel />
-                <threadName />
             </providers>
         </encoder>
     </appender>

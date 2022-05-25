@@ -28,14 +28,14 @@ class UserFn : LoggedStatefulFunction() {
 
     override fun invoke(context: Context, requestId: String, message: WrappedMessage): CompletableFuture<Void> {
         when (message) {
-            is AddCredit -> handleAddCredit(context, message)
+            is AddCredit -> handleAddCredit(context, requestId, message)
             is RetractCredit -> handleRetractCredit(context, requestId, message)
         }
 
         return context.done()
     }
 
-    private fun handleAddCredit(context: Context, message: AddCredit) {
+    private fun handleAddCredit(context: Context, requestId: String, message: AddCredit) {
         logger.info { "User ${context.self().id()} - Adding ${message.amount} credit" }
 
         val storage = context.storage()
@@ -46,6 +46,7 @@ class UserFn : LoggedStatefulFunction() {
         logger.info { "User ${context.self().id()} - New amount of credit: ${user.credit}" }
 
         storage.set(USER, user)
+        sendEgressDone(context, requestId)
     }
 
     private fun handleRetractCredit(context: Context, requestId: String, message: RetractCredit) {

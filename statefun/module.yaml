@@ -85,6 +85,6 @@ spec:
 kind: io.statefun.kafka.v1/egress
 spec:
   id: benchmark/egress
-  address: kafka:9092
+  address: kafka.default.svc.cluster.local:9092
   deliverySemantic:
     type: at-least-once

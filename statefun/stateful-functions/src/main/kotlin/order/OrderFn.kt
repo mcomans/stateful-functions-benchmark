@@ -5,7 +5,6 @@ import createJsonType
 import messages.BenchmarkMessages
 import mu.KotlinLogging
 import org.apache.flink.statefun.sdk.java.*
-import org.apache.flink.statefun.sdk.java.io.KafkaEgressMessage
 import org.apache.flink.statefun.sdk.java.message.MessageBuilder
 import product.ProductFn
 import shoppingcart.ShoppingCartFn
@@ -30,7 +29,6 @@ class OrderFn : LoggedStatefulFunction() {
 
     companion object {
         val TYPE = TypeName.typeNameFromString("benchmark/order")
-        val KAFKA_EGRESS = TypeName.typeNameFromString("benchmark/egress")
         val ORDER: ValueSpec<Order> = ValueSpec.named("order").withCustomType(Order.TYPE)
         val SPEC = StatefulFunctionSpec.builder(TYPE)
             .withValueSpec(ORDER)
@@ -147,20 +145,11 @@ class OrderFn : LoggedStatefulFunction() {
 
             order.status = "COMPLETED"
 
-            // Send message to egress
-            context.send(
-                KafkaEgressMessage.forEgress(KAFKA_EGRESS)
-                    .withTopic("egress")
-                    .withUtf8Key(requestId)
-                    .withUtf8Value("DONE")
-                    .build()
-            )
-
+            sendEgressDone(context, requestId)
             // Send analytics after
             order.products.forEach { (productId, _) ->
                 sendItemsBoughtTogether(productId, order.products.mapNotNull { (p, _) -> p.takeIf{p != productId} }, context, requestId)
             }
-
         } else {
             logger.info { "Order ${context.self().id()} - Credit insufficient, rolling back stock changes" }
             order.products.forEach { entry -> rollbackStock(entry, context, requestId) }

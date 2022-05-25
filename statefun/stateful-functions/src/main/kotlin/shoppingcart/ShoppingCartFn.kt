@@ -32,15 +32,15 @@ class ShoppingCartFn : LoggedStatefulFunction() {
 
     override fun invoke(context: Context, requestId: String, message: WrappedMessage): CompletableFuture<Void> {
         when (message) {
-            is AddToCart -> handleAddToCart(context, message)
-            is RemoveFromCart -> handleRemoveFromCart(context, message)
+            is AddToCart -> handleAddToCart(context, requestId, message)
+            is RemoveFromCart -> handleRemoveFromCart(context, requestId, message)
             is GetCart -> handleGetCart(context, requestId)
         }
 
         return context.done()
     }
 
-    private fun handleAddToCart(context: Context, message: AddToCart) {
+    private fun handleAddToCart(context: Context, requestId: String, message: AddToCart) {
         logger.info {
             "Shopping cart ${
                 context.self().id()
@@ -54,9 +54,11 @@ class ShoppingCartFn : LoggedStatefulFunction() {
         cart.contents[message.productId] = productAmountInCart + message.amount
         logger.info { "Shopping cart ${context.self().id()} - Cart contents: ${cart.contents}" }
         storage.set(SHOPPING_CART, cart)
+
+        sendEgressDone(context, requestId)
     }
 
-    private fun handleRemoveFromCart(context: Context, message: RemoveFromCart) {
+    private fun handleRemoveFromCart(context: Context, requestId: String, message: RemoveFromCart) {
         val storage = context.storage()
         val cart = storage.get(SHOPPING_CART).orElse(ShoppingCart(HashMap()))
         if (cart.contents.contains(message.productId)) {
@@ -71,6 +73,7 @@ class ShoppingCartFn : LoggedStatefulFunction() {
             logger.info { "Shopping cart ${context.self().id()} - Cart contents: ${cart.contents}" }
             storage.set(SHOPPING_CART, cart)
         }
+        sendEgressDone(context, requestId)
     }
 
     private fun handleGetCart(context: Context, requestId: String) {

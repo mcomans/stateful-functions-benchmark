@@ -1,11 +1,13 @@
 package api
 
+import org.apache.kafka.clients.admin.NewTopic
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
-import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
-import org.springframework.kafka.core.*
+import org.springframework.kafka.core.DefaultKafkaProducerFactory
+import org.springframework.kafka.core.KafkaTemplate
+import org.springframework.kafka.core.ProducerFactory
 
 
 @SpringBootApplication
@@ -26,22 +28,8 @@ class ApiApplication(private val kafkaProperties: KafkaProperties) {
         return KafkaTemplate(producerFactory())
     }
 
-//    @Bean
-//    fun consumerConfigs(): Map<String, Any> {
-//        return HashMap<String, Any>(kafkaProperties.buildConsumerProperties())
-//    }
-
-//    @Bean
-//    fun consumerFactory(): ConsumerFactory<String, String> {
-//        return DefaultKafkaConsumerFactory(consumerConfigs())
-//    }
-
-//    @Bean
-//    fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<String, String> {
-//        val factory = ConcurrentKafkaListenerContainerFactory<String, String>()
-//        factory.consumerFactory = consumerFactory()
-//        return factory
-//    }
+    @Bean
+    fun topic() = NewTopic("egress", 10, 1)
 }
 
 fun main(args: Array<String>) {
