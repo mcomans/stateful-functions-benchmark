@@ -27,6 +27,7 @@ spec:
           resources:
             requests:
               memory: "1.5Gi"
+              cpu: 3.1
           ports:
             - containerPort: 6122
               name: rpc

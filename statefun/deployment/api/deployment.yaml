@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: benchmark-api
-  namespace: benchmark
 spec:
   replicas: 2
   selector:
@@ -15,8 +14,10 @@ spec:
     spec:
       containers:
         - name: main
-          image: benchmark-statefun-api
-          # imagePullPolicy: Always
-          imagePullPolicy: Never
+          image: eu.gcr.io/martijns/benchmark-statefun-api
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: 1
           ports:
             - containerPort: 8080
