@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 class EgressConsumer {
     private val logger: Logger = LoggerFactory.getLogger(EgressConsumer::class.java)
 
-   @KafkaListener(id = "api-egress-listener", topics = ["egress"])
+   @KafkaListener(topics = ["egress"])
    fun listen(record: ConsumerRecord<String, String>) {
        MDC.put("requestId", record.key())
        MDC.put("status", "EGRESS_DONE")
