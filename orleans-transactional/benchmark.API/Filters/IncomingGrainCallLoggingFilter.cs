@@ -30,16 +30,18 @@ namespace benchmark.API.Filters
                 var grainType = context.Grain.GetType().Name;
                 var transactionId = TransactionContext.GetTransactionInfo()?.Id;
                 GrainContext.CurrentGrain.Value = context.Grain;
+                var callId = RequestContext.Get("callId");
 
                 using (_logger.BeginScope(new Dictionary<string, object>
-                       {
-                           ["traceId"] = traceId,
-                           ["grainId"] = grainId,
-                           ["grainType"] = grainType,
-                           ["method"] = context.ImplementationMethod.Name,
-                           ["status"] = "INCOMING_CALL",
-                           ["transactionId"] = transactionId
-                       }))
+               {
+                   ["traceId"] = traceId,
+                   ["grainId"] = grainId,
+                   ["grainType"] = grainType,
+                   ["method"] = context.ImplementationMethod.Name,
+                   ["status"] = "INCOMING_CALL",
+                   ["transactionId"] = transactionId,
+                   ["callId"] = callId
+               }))
                 {
                     _logger.Info("Starting execution");
                 }
@@ -53,7 +55,8 @@ namespace benchmark.API.Filters
                     ["grainType"] = grainType,
                     ["method"] = context.ImplementationMethod.Name,
                     ["status"] = "RETURNING_CALL",
-                    ["transactionId"] = transactionId
+                    ["transactionId"] = transactionId,
+                    ["callId"] = callId
                 }))
                 {
                     _logger.Info("Execution complete");
