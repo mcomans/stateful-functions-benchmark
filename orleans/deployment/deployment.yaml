@@ -8,7 +8,7 @@ spec:
   selector:
     matchLabels:
       orleans/serviceId: benchmark-orleans
-  replicas: 3
+  replicas: 4
   template:
     metadata:
       labels:
@@ -27,9 +27,8 @@ spec:
     spec:
       containers:
         - name: main
-          image: benchmark-orleans
-          # imagePullPolicy: Always
-          imagePullPolicy: Never
+          image: eu.gcr.io/martijns/benchmark-orleans:latest
+          imagePullPolicy: Always
           ports:
             # Define the ports which Orleans uses
             - containerPort: 11111
@@ -61,9 +60,16 @@ spec:
                 fieldRef:
                   fieldPath: status.podIP
             - name: DOTNET_SHUTDOWNTIMEOUTSECONDS
-              value: "120"
-          request:
-          # Set resource requests
+              value: "30"
+          resources:
+            requests:
+              cpu: 3.1
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 60
       terminationGracePeriodSeconds: 180
   minReadySeconds: 60
   strategy:

@@ -5,8 +5,7 @@ metadata:
 spec:
   selector:
     orleans/serviceId: benchmark-orleans
-  type: LoadBalancer
   ports:
     - protocol: TCP
-      port: 5001
+      port: 80
       targetPort: 80
