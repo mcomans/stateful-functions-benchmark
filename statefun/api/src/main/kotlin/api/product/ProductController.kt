@@ -35,7 +35,7 @@ class ProductController(val kafkaTemplate: KafkaTemplate<String, Any>, val reque
     }
 
     @GetMapping("/{productId}/freq-items")
-    fun getFrequentItems(@PathVariable productId: String, @RequestBody query: FrequentItemsQuery) {
+    fun getFrequentItems(@PathVariable productId: String, query: FrequentItemsQuery) {
         kafkaTemplate.sendLogged("freq-items-query", productId, MessageWrapper(requestInfo.requestId,
             GetFrequentlyBoughtTogetherGraph(top = query.top, depth = query.depth, visited = setOf())), logger)
     }
