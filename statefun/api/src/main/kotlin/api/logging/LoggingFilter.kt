@@ -20,7 +20,6 @@ class LoggingFilter(val requestInfo: RequestInfo) : Filter {
         if (request is HttpServletRequest) {
             MDC.put("requestId", requestInfo.requestId)
             MDC.put("status", "HTTP_EXECUTING")
-            logger.info("Request started: ${requestInfo.requestId}")
             chain.doFilter(request, response)
             MDC.remove("requestId")
             MDC.remove("status")
