@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 @Component
-class LoggingInterceptor() : HandlerInterceptor {
+class LoggingInterceptor : HandlerInterceptor {
     private val logger: Logger = LoggerFactory.getLogger(LoggingFilter::class.java)
 
     override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
