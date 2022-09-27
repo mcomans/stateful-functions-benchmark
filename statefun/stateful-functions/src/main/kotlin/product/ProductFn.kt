@@ -174,7 +174,7 @@ class ProductFn : LoggedStatefulFunction() {
 
         val productId = context.caller().get().id()
 
-        logger.debug { "Product ${context.self().id()} - Received ${message.products} from product $productId" }
+        logger.debug { "Product ${context.self().id()} - Received ${message.products.size} freq items from product $productId" }
 
         requestQueryResults.queriedProducts[productId]?.responded = true
         requestQueryResults.queriedProducts[productId]?.results?.addAll(message.products)
