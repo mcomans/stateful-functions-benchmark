@@ -188,7 +188,7 @@ class ProductFn : LoggedStatefulFunction() {
                     requestQueryResults.queriedProducts.values.fold(setOf()) { acc, productResults -> acc + productResults.results },
                     requestQueryResults.callerId, context, requestId)
             } else {
-                queryResults.results[requestId] = requestQueryResults
+                queryResults.results.remove(requestId)
                 sendEgressDone(context, requestId)
             }
         } else {
