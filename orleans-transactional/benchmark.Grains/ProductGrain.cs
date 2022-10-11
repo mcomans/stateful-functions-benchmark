@@ -5,7 +5,6 @@ using benchmark.Interfaces;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Concurrency;
-using Orleans.Runtime;
 using Orleans.Transactions.Abstractions;
 
 namespace benchmark.Grains
@@ -14,14 +13,11 @@ namespace benchmark.Grains
     public class ProductGrain : Grain, IProductGrain
     {
         private readonly ITransactionalState<ProductState> _productState;
-        private readonly IPersistentState<AnalyticsState> _analyticsState;
 
         public ProductGrain([TransactionalState("product", "benchmarkStore")] ITransactionalState<ProductState> productState,
-            [PersistentState("product-analytics", "benchmarkStore")] IPersistentState<AnalyticsState> analyticsState,
             ILogger<ProductGrain> logger)
         {
             _productState = productState;
-            _analyticsState = analyticsState;
         }
 
         public async Task IncreaseStock(int amount)
@@ -51,19 +47,21 @@ namespace benchmark.Grains
 
         public async Task UpdateFrequentItems(List<IProductGrain> products)
         {
-            foreach (var product in products)
-                if (_analyticsState.State.FrequentItems.ContainsKey(product))
-                    _analyticsState.State.FrequentItems[product] += 1;
-                else
-                    _analyticsState.State.FrequentItems[product] = 1;
-
-            await _analyticsState.WriteStateAsync();
+            await _productState.PerformUpdate(x =>
+            {
+                foreach (var product in products)
+                    if (x.FrequentItems.ContainsKey(product))
+                        x.FrequentItems[product] += 1;
+                    else
+                        x.FrequentItems[product] = 1;
+            });
         }
 
         public async Task<ISet<IProductGrain>> GetFrequentItemsGraph(ISet<IProductGrain> visited, int depth = 3,
             int top = 3)
         {
-            var topProducts = _analyticsState.State.FrequentItems.OrderBy(p => p.Value)
+            var frequentItems = await _productState.PerformRead(x => x.FrequentItems);
+            var topProducts = frequentItems.OrderBy(p => p.Value)
                 .Where(p => !visited.Contains(p.Key))
                 .Take(top)
                 .Select(p => p.Key)
@@ -86,10 +84,7 @@ namespace benchmark.Grains
     {
         public int Price { get; set; }
         public int Stock { get; set; }
-    }
 
-    public class AnalyticsState
-    {
         public Dictionary<IProductGrain, int> FrequentItems { get; } = new();
     }
 }
