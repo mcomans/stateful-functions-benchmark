@@ -27,10 +27,11 @@ namespace benchmark.Interfaces
         [Transaction(TransactionOption.CreateOrJoin)]
         Task<int> GetPrice();
 
-        [Transaction(TransactionOption.Suppress)]
+        [Transaction(TransactionOption.CreateOrJoin)]
         Task UpdateFrequentItems(List<IProductGrain> products);
 
         [AlwaysInterleave]
+        [Transaction(TransactionOption.CreateOrJoin)]
         Task<ISet<IProductGrain>> GetFrequentItemsGraph(ISet<IProductGrain> visited, int depth = 3, int top = 3);
     }
 }
