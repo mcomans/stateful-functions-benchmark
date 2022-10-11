@@ -16,9 +16,8 @@ namespace benchmark.Grains
         private readonly ITransactionalState<ProductState> _productState;
         private readonly IPersistentState<AnalyticsState> _analyticsState;
 
-        public ProductGrain(
-            [PersistentState("productAnalytics", "benchmarkStore")] IPersistentState<AnalyticsState> analyticsState,
-            [TransactionalState("product", "benchmarkStore")] ITransactionalState<ProductState> productState,
+        public ProductGrain([TransactionalState("product", "benchmarkStore")] ITransactionalState<ProductState> productState,
+            [PersistentState("product-analytics", "benchmarkStore")] IPersistentState<AnalyticsState> analyticsState,
             ILogger<ProductGrain> logger)
         {
             _productState = productState;
