@@ -43,7 +43,7 @@ namespace benchmark.Grains
                 return false;
             }
 
-            UpdateFrequentItems(products.Select(p => p.Key));
+            await UpdateFrequentItems(products.Select(p => p.Key));
 
             return true;
         }
