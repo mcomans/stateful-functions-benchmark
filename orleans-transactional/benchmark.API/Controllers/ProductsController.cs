@@ -67,9 +67,9 @@ namespace benchmark.API.Controllers
             }
             
             var product = _client.GetGrain<IProductGrain>(id);
-            var products = await product.GetFrequentItemsGraph(new HashSet<IProductGrain> { product }, depth, top);
+            var products = await product.GetFrequentItemsGraph(new HashSet<Guid> { id }, depth, top);
 
-            return products.Select(p => p.GetPrimaryKey().ToString()).ToList();
+            return products.Select(p => p.ToString()).ToList();
         }
     }
 

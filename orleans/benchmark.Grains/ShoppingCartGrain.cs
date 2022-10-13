@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,23 +24,23 @@ namespace benchmark.Grains
 
         public async Task AddToCart(IProductGrain product, int amount)
         {
-            if (_shoppingCartState.State.Contents.ContainsKey(product))
-                _shoppingCartState.State.Contents[product] += amount;
+            if (_shoppingCartState.State.Contents.ContainsKey(product.GetPrimaryKey()))
+                _shoppingCartState.State.Contents[product.GetPrimaryKey()] += amount;
             else
-                _shoppingCartState.State.Contents.Add(product, amount);
+                _shoppingCartState.State.Contents.Add(product.GetPrimaryKey(), amount);
 
             await _shoppingCartState.WriteStateAsync();
         }
 
         public async Task RemoveFromCart(IProductGrain product, int amount)
         {
-            if (_shoppingCartState.State.Contents.ContainsKey(product))
-                _shoppingCartState.State.Contents[product] -= amount;
+            if (_shoppingCartState.State.Contents.ContainsKey(product.GetPrimaryKey()))
+                _shoppingCartState.State.Contents[product.GetPrimaryKey()] -= amount;
 
             await _shoppingCartState.WriteStateAsync();
         }
 
-        public Task<List<KeyValuePair<IProductGrain, int>>> GetContents()
+        public Task<List<KeyValuePair<Guid, int>>> GetContents()
         {
             var contents = _shoppingCartState.State.Contents.ToList();
             _logger.Info("{productCount} {traceId}", contents.Count, RequestContext.Get("traceId"));
@@ -49,6 +50,6 @@ namespace benchmark.Grains
 
     public class ShoppingCartState
     {
-        public Dictionary<IProductGrain, int> Contents { get; } = new();
+        public Dictionary<Guid, int> Contents { get; } = new();
     }
 }

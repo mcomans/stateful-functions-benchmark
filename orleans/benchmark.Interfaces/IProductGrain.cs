@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Orleans;
@@ -22,9 +23,9 @@ namespace benchmark.Interfaces
         Task SetPrice(int price);
         Task<int> GetPrice();
 
-        Task UpdateFrequentItems(List<IProductGrain> products);
+        Task UpdateFrequentItems(List<Guid> products);
 
         [AlwaysInterleave]
-        Task<ISet<IProductGrain>> GetFrequentItemsGraph(ISet<IProductGrain> visited, int depth = 3, int top = 3);
+        Task<ISet<Guid>> GetFrequentItemsGraph(ISet<Guid> visited, int depth = 3, int top = 3);
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -45,7 +46,7 @@ namespace benchmark.Grains
             return _productState.PerformRead(x => x.Price);
         }
 
-        public async Task UpdateFrequentItems(List<IProductGrain> products)
+        public async Task UpdateFrequentItems(List<Guid> products)
         {
             await _productState.PerformUpdate(x =>
             {
@@ -57,7 +58,7 @@ namespace benchmark.Grains
             });
         }
 
-        public async Task<ISet<IProductGrain>> GetFrequentItemsGraph(ISet<IProductGrain> visited, int depth = 3,
+        public async Task<ISet<Guid>> GetFrequentItemsGraph(ISet<Guid> visited, int depth = 3,
             int top = 3)
         {
             var frequentItems = await _productState.PerformRead(x => x.FrequentItems);
@@ -72,7 +73,7 @@ namespace benchmark.Grains
             var newVisited = visited.Union(topProducts).ToHashSet();
 
             var tasks = topProducts.Select(p =>
-                p.GetFrequentItemsGraph(newVisited, depth - 1, top));
+                GrainFactory.GetGrain<IProductGrain>(p).GetFrequentItemsGraph(newVisited, depth - 1, top));
 
             var results = await Task.WhenAll(tasks);
 
@@ -85,6 +86,6 @@ namespace benchmark.Grains
         public int Price { get; set; }
         public int Stock { get; set; }
 
-        public Dictionary<IProductGrain, int> FrequentItems { get; } = new();
+        public Dictionary<Guid, int> FrequentItems { get; } = new();
     }
 }

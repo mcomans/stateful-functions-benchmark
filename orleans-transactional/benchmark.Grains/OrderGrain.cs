@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,10 +18,11 @@ namespace benchmark.Grains
         {
             var products = await shoppingCart.GetContents();
             var retractStockResults = await Task.WhenAll(
-                products.OrderBy(p => p.Key.GetPrimaryKey().ToString()).Select(async product =>
-            {
-                var (success, price) = await product.Key.DecreaseStock(product.Value);
-                return (success, productTotal: price * product.Value, product: product.Key, amount: product.Value);
+                products.OrderBy(p => p.Key.ToString()).Select(async product =>
+                {
+                var productGrain = GrainFactory.GetGrain<IProductGrain>(product.Key);
+                var (success, price) = await productGrain.DecreaseStock(product.Value);
+                return (success, productTotal: price * product.Value, product: productGrain, amount: product.Value);
             }));
 
             // If any result of DecreaseStock is not successful, rollback changes to the other products
@@ -43,16 +45,16 @@ namespace benchmark.Grains
                 return false;
             }
 
-            await UpdateFrequentItems(products.Select(p => p.Key));
+            await UpdateFrequentItems(products.Select(p => p.Key).ToList());
 
             return true;
         }
 
-        private static async Task UpdateFrequentItems(IEnumerable<IProductGrain> products)
+        private async Task UpdateFrequentItems(IReadOnlyCollection<Guid> products)
         {
-            var productGrains = products.ToList();
+            var productGrains = products.Select(id => GrainFactory.GetGrain<IProductGrain>(id)).ToList();
             foreach (var product in productGrains)
-                await product.UpdateFrequentItems(productGrains.Where(p => p != product).ToList());
+                await product.UpdateFrequentItems(products.Where(p => p != product.GetPrimaryKey()).ToList());
         }
     }
 }
