@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Orleans;
@@ -9,6 +8,6 @@ namespace benchmark.Interfaces
     {
         Task AddToCart(IProductGrain product, int amount);
         Task RemoveFromCart(IProductGrain product, int amount);
-        Task<List<KeyValuePair<Guid, int>>> GetContents();
+        Task<List<KeyValuePair<IProductGrain, int>>> GetContents();
     }
 }

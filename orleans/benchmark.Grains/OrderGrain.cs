@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,9 +18,8 @@ namespace benchmark.Grains
             var products = await shoppingCart.GetContents();
             var retractStockResults = await Task.WhenAll(products.Select(async product =>
             {
-                var productGrain = GrainFactory.GetGrain<IProductGrain>(product.Key);
-                var (success, price) = await productGrain.DecreaseStock(product.Value);
-                return (success, productTotal: price * product.Value, product: productGrain, amount: product.Value);
+                var (success, price) = await product.Key.DecreaseStock(product.Value);
+                return (success, productTotal: price * product.Value, product: product.Key, amount: product.Value);
             }));
 
             // If any result of DecreaseStock is not successful, rollback changes to the other products
@@ -49,11 +47,11 @@ namespace benchmark.Grains
             return true;
         }
 
-        private async Task UpdateFrequentItems(IEnumerable<Guid> products)
+        private static async Task UpdateFrequentItems(IEnumerable<IProductGrain> products)
         {
-            var productGrains = products.Select(id => GrainFactory.GetGrain<IProductGrain>(id)).ToList();
+            var productGrains = products.ToList();
             foreach (var product in productGrains)
-                await product.UpdateFrequentItems(productGrains.Where(p => p != product).Select(p => p.GetPrimaryKey()).ToList());
+                await product.UpdateFrequentItems(productGrains.Where(p => p != product).ToList());
         }
     }
 }

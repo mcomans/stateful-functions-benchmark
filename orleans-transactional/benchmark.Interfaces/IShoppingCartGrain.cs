@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Orleans;
@@ -12,6 +11,6 @@ namespace benchmark.Interfaces
         Task RemoveFromCart(IProductGrain product, int amount);
         
         [Transaction(TransactionOption.Supported)]
-        Task<List<KeyValuePair<Guid, int>>> GetContents();
+        Task<List<KeyValuePair<IProductGrain, int>>> GetContents();
     }
 }
