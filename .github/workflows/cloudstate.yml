@@ -35,4 +35,8 @@ jobs:
         uses: gradle/wrapper-validation-action@v1
 
       - name: Build and push with JIB
-        run: ./gradlew :product-service:jib --Djib.to.image=eu.gcr.io/${{ secrets.GC_PROJECT_ID }}/${{ env.PRODUCT_IMAGE_NAME }} --Djib.to.auth.username=_json_key --Djib.to.auth.password=${{ secrets.GC_JSON_KEY }}
+        run: |
+          ./gradlew :product-service:jib \
+          -Djib.to.image=eu.gcr.io/${{ secrets.GC_PROJECT_ID }}/${{ env.PRODUCT_IMAGE_NAME }} \
+          -Djib.to.auth.username=_json_key \
+          -Djib.to.auth.password=${{ secrets.GC_JSON_KEY }}
