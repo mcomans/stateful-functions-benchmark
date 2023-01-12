@@ -34,9 +34,14 @@ jobs:
       - name: Validate gradle wrapper
         uses: gradle/wrapper-validation-action@v1
 
+      - name: Login to GCR
+        uses: docker/login-action@v2
+        with:
+          username: _json_key
+          password: "${{ secrets.GC_JSON_KEY }}"
+          registry: eu.gcr.io
+
       - name: Build and push with JIB
         run: |
           ./gradlew :product-service:jib \
-          -Djib.to.image=eu.gcr.io/${{ secrets.GC_PROJECT_ID }}/${{ env.PRODUCT_IMAGE_NAME }} \
-          -Djib.to.auth.username=_json_key \
-          -Djib.to.auth.password=${{ secrets.GC_JSON_KEY }}
+          -Djib.to.image=eu.gcr.io/${{ secrets.GC_PROJECT_ID }}/${{ env.PRODUCT_IMAGE_NAME }}
