@@ -46,12 +46,18 @@ protobuf {
     }
 
     plugins {
-        plugins {
+        if (org.apache.tools.ant.taskdefs.condition.Os.isFamily(org.apache.tools.ant.taskdefs.condition.Os.FAMILY_MAC)) {
             id("grpc") {
                 artifact = "io.grpc:protoc-gen-grpc-java:1.41.0:osx-x86_64"
             }
         }
+        else {
+            id("grpc") {
+                artifact = "io.grpc:protoc-gen-grpc-java:1.41.0"
+            }
+        }
     }
+
     generateProtoTasks {
         all().forEach {
             it.plugins {
