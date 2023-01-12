@@ -1,5 +1,6 @@
 import com.google.protobuf.gradle.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
     kotlin("jvm") version "1.5.0"
@@ -41,8 +42,15 @@ protobuf {
     }
 
     plugins {
-        id("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java:1.41.0:osx-x86_64"
+        if (Os.isFamily(Os.FAMILY_MAC)) {
+            id("grpc") {
+                artifact = "io.grpc:protoc-gen-grpc-java:1.41.0:osx-x86_64"
+            }
+        }
+        else {
+            id("grpc") {
+                artifact = "io.grpc:protoc-gen-grpc-java:1.41.0"
+            }
         }
     }
     generateProtoTasks {
