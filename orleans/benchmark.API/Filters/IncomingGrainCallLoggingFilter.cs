@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using benchmark.Grains;
@@ -27,7 +28,8 @@ namespace benchmark.API.Filters
                 var grainId = context.Grain.GetPrimaryKey();
                 var grainType = context.Grain.GetType().Name;
                 GrainContext.CurrentGrain.Value = context.Grain;
-                var callId = RequestContext.Get("callId");
+                var callId = RequestContext.Get("callId") as Guid?;
+                GrainContext.CallId.Value = callId;
 
                 using (_logger.BeginScope(new Dictionary<string, object>
                 {

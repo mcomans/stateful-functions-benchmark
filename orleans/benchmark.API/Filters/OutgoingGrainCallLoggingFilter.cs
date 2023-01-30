@@ -30,6 +30,7 @@ namespace benchmark.API.Filters
                 var currentGrain = GrainContext.CurrentGrain.Value;
                 var callId = Guid.NewGuid();
                 RequestContext.Set("callId", callId);
+                var previousCallId = GrainContext.CallId.Value;
 
                 using (_logger.BeginScope(new Dictionary<string, object>
                 {
@@ -40,7 +41,8 @@ namespace benchmark.API.Filters
                     ["currentGrainType"] = currentGrain?.GetType().Name,
                     ["method"] = context.InterfaceMethod.Name,
                     ["status"] = "OUTGOING_CALL",
-                    ["callId"] = callId
+                    ["callId"] = callId,
+                    ["previousCallId"] = previousCallId
                 }))
                 {
                     _logger.Info("Starting execution");
@@ -57,7 +59,8 @@ namespace benchmark.API.Filters
                     ["currentGrainType"] = currentGrain?.GetType().Name,
                     ["method"] = context.InterfaceMethod.Name,
                     ["status"] = "OUTGOING_CALL_RETURNED",
-                    ["callId"] = callId
+                    ["callId"] = callId,
+                    ["previousCallId"] = previousCallId
                 }))
                 {
                     _logger.Info("Execution complete");
